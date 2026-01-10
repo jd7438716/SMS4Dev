@@ -7,7 +7,9 @@
 <br />
 
 <div align="center">
-  English | [中文](README_zh-CN.md)
+
+English | [中文](README_zh-CN.md)
+
 </div>
 
 <br />
@@ -40,7 +42,7 @@ If you prefer to run the code locally or contribute to the project:
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/sms4dev.git
+    git clone https://github.com/jd7438716/SMS4Dev.git
     cd sms4dev
     ```
 

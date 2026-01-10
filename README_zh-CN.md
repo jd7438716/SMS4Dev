@@ -7,7 +7,9 @@
 <br />
 
 <div align="center">
-  [English](README.md) | 中文
+
+[English](README.md) | 中文
+
 </div>
 
 <br />
@@ -40,7 +42,7 @@ docker run -d -p 5081:5081 boyce6280/sms4dev
 
 1.  **克隆仓库**：
     ```bash
-    git clone https://github.com/your-username/sms4dev.git
+    git clone https://github.com/jd7438716/SMS4Dev.git
     cd sms4dev
     ```
 
