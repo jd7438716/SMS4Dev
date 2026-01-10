@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SmsTemplate, SmsSignature, ApiCredential, WebhookConfig } from '../types';
-import { Plus, Trash2, Key, Shield, FileText, CheckCircle, Clock, Copy, RefreshCw, Network, Zap } from 'lucide-react';
+import { Plus, Trash2, Key, Shield, FileText, CheckCircle, Clock, Copy, RefreshCw, Network, Zap, Edit2, X } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 
 interface ConfigurationProps {
@@ -10,6 +10,7 @@ interface ConfigurationProps {
   apiCredential: ApiCredential;
   webhookConfig: WebhookConfig;
   onAddTemplate: (t: SmsTemplate) => void;
+  onUpdateTemplate: (id: string, t: SmsTemplate) => void;
   onDeleteTemplate: (id: string) => void;
   onAddSignature: (s: SmsSignature) => void;
   onDeleteSignature: (id: string) => void;
@@ -23,6 +24,7 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   apiCredential,
   webhookConfig,
   onAddTemplate,
+  onUpdateTemplate,
   onDeleteTemplate,
   onAddSignature,
   onDeleteSignature,
@@ -42,6 +44,7 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   const [newTplName, setNewTplName] = useState('');
   const [newTplContent, setNewTplContent] = useState('');
   const [newTplType, setNewTplType] = useState<'OTP' | 'Notification' | 'Marketing'>('OTP');
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
 
   // Webhook form state
   const [webhookUrl, setWebhookUrl] = useState(webhookConfig.url);
@@ -96,16 +99,45 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   const handleAddTpl = (e: React.FormEvent) => {
     e.preventDefault();
     if(!newTplName || !newTplContent) return;
-    onAddTemplate({
-      id: `TPL${Math.floor(Math.random()*10000)}`,
-      name: newTplName,
-      content: newTplContent,
-      type: newTplType,
-      status: 'approved',
-      created: new Date().toISOString()
-    });
+
+    if (editingTemplateId) {
+      const existing = templates.find(t => t.id === editingTemplateId);
+      if (existing) {
+        onUpdateTemplate(editingTemplateId, {
+          ...existing,
+          name: newTplName,
+          content: newTplContent,
+          type: newTplType,
+        });
+      }
+      setEditingTemplateId(null);
+    } else {
+      onAddTemplate({
+        id: `TPL${Math.floor(Math.random()*10000)}`,
+        name: newTplName,
+        content: newTplContent,
+        type: newTplType,
+        status: 'approved',
+        created: new Date().toISOString()
+      });
+    }
     setNewTplName('');
     setNewTplContent('');
+    setNewTplType('OTP');
+  };
+
+  const handleEditTpl = (tpl: SmsTemplate) => {
+    setEditingTemplateId(tpl.id);
+    setNewTplName(tpl.name);
+    setNewTplContent(tpl.content);
+    setNewTplType(tpl.type);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTemplateId(null);
+    setNewTplName('');
+    setNewTplContent('');
+    setNewTplType('OTP');
   };
 
   const handleSaveWebhook = () => {
@@ -382,9 +414,15 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                           />
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Use <code>{'${variable}'}</code> for dynamic content.</p>
                         </div>
-                        <div className="flex justify-end">
+                        <div className="flex justify-end gap-2">
+                           {editingTemplateId && (
+                             <button type="button" onClick={handleCancelEdit} className="bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300 dark:hover:bg-slate-600 flex items-center gap-2">
+                                <X size={16} /> Cancel
+                             </button>
+                           )}
                            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
-                              <Plus size={16} /> {t('config.tpl.create')}
+                              {editingTemplateId ? <Edit2 size={16} /> : <Plus size={16} />} 
+                              {editingTemplateId ? 'Update Template' : t('config.tpl.create')}
                            </button>
                         </div>
                       </form>
@@ -392,7 +430,7 @@ export const Configuration: React.FC<ConfigurationProps> = ({
 
                     <div className="space-y-4">
                       {templates.map(tpl => (
-                        <div key={tpl.id} className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div key={tpl.id} className={`bg-white dark:bg-slate-900 border ${editingTemplateId === tpl.id ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-200 dark:border-slate-800'} rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow`}>
                            <div className="flex justify-between items-start mb-2">
                               <div>
                                 <div className="flex items-center gap-2">
@@ -406,9 +444,14 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                                   {tpl.type}
                                 </span>
                               </div>
-                              <button onClick={() => onDeleteTemplate(tpl.id)} className="text-gray-400 hover:text-red-500">
-                                <Trash2 size={16} />
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => handleEditTpl(tpl)} className="text-gray-400 hover:text-blue-500">
+                                  <Edit2 size={16} />
+                                </button>
+                                <button onClick={() => onDeleteTemplate(tpl.id)} className="text-gray-400 hover:text-red-500">
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
                            </div>
                            <div className="bg-gray-50 dark:bg-slate-800 p-3 rounded border border-gray-100 dark:border-slate-700 font-mono text-sm text-gray-700 dark:text-gray-300 break-words">
                              {tpl.content}

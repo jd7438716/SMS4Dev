@@ -146,6 +146,16 @@ app.post('/api/templates', (req, res) => {
     });
 });
 
+app.put('/api/templates/:id', (req, res) => {
+    console.log(`[API] PUT /api/templates/${req.params.id}`);
+    const { name, content, type, status } = req.body;
+    const sql = "UPDATE templates SET name = ?, content = ?, type = ?, status = ? WHERE id = ?";
+    db.run(sql, [name, content, type, status, req.params.id], function(err) {
+        if (err) return res.status(500).json({error: err.message});
+        res.json({ message: "Updated", changes: this.changes });
+    });
+});
+
 app.delete('/api/templates/:id', (req, res) => {
     console.log(`[API] DELETE /api/templates/${req.params.id}`);
     db.run("DELETE FROM templates WHERE id = ?", [req.params.id], function(err) {

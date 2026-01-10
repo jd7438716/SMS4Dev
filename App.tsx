@@ -206,6 +206,19 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handleUpdateTemplate = async (id: string, tpl: SmsTemplate) => {
+    try {
+        const res = await fetch(`/api/templates/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tpl)
+        });
+        if (res.ok) fetchTemplates();
+    } catch (e) {
+        console.error("Update template error", e);
+    }
+  };
+
   const handleDeleteTemplate = async (id: string) => {
     try {
         await fetch(`/api/templates/${id}`, { method: 'DELETE' });
@@ -382,6 +395,7 @@ const AppContent: React.FC = () => {
                         apiCredential={apiCredential}
                         webhookConfig={webhookConfig}
                         onAddTemplate={handleAddTemplate}
+                        onUpdateTemplate={handleUpdateTemplate}
                         onDeleteTemplate={handleDeleteTemplate}
                         onAddSignature={handleAddSignature}
                         onDeleteSignature={handleDeleteSignature}
