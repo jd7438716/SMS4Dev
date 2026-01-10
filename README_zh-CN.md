@@ -27,10 +27,17 @@
 
 ### Docker 快速开始
 
-本项目镜像已发布到 Docker Hub。您可以通过以下命令快速启动：
+本项目镜像已发布到 Docker Hub 和阿里云镜像仓库。您可以通过以下命令快速启动：
 
+**Docker Hub**
 ```bash
 docker run -d -p 5081:5081 boyce6280/sms4dev
+```
+
+**阿里云 ACR (国内加速)**
+国内用户推荐使用阿里云镜像源以获得更快的下载速度：
+```bash
+docker run -d -p 5081:5081 crpi-24eqfvp93x6tspe9.cn-shenzhen.personal.cr.aliyuncs.com/boyce6280/sms4dev
 ```
 
 容器启动后，请在浏览器中访问：

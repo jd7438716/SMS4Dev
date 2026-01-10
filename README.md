@@ -29,8 +29,15 @@ English | [中文](README_zh-CN.md)
 
 The application is published on Docker Hub. You can pull and run it with a single command:
 
+**Docker Hub**
 ```bash
 docker run -d -p 5081:5081 boyce6280/sms4dev
+```
+
+**Aliyun ACR (China Mirror)**
+If you are in China, you can use the Aliyun mirror for faster download:
+```bash
+docker run -d -p 5081:5081 crpi-24eqfvp93x6tspe9.cn-shenzhen.personal.cr.aliyuncs.com/boyce6280/sms4dev
 ```
 
 Once the container is running, open your browser and navigate to:
