@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require("socket.io");
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
@@ -6,6 +8,14 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*", // Allow all origins for development
+        methods: ["GET", "POST"]
+    }
+});
+
 const PORT = process.env.PORT || 5081;
 
 app.use(cors());
@@ -26,6 +36,19 @@ const db = new sqlite3.Database(dbPath, (err) => {
         console.error('Error opening database ' + dbPath + ': ' + err.message);
     } else {
         console.log('Connected to the SQLite database at ' + dbPath);
+        
+        // Basic Migration Helper: Ensure columns exist
+        const ensureColumn = (table, column, definition) => {
+            db.all(`PRAGMA table_info(${table})`, [], (err, rows) => {
+                if (err) return;
+                const exists = rows.some(r => r.name === column);
+                if (!exists) {
+                    console.log(`Migrating: Adding ${column} to ${table}`);
+                    db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+                }
+            });
+        };
+
         db.run(`CREATE TABLE IF NOT EXISTS messages (
             id TEXT PRIMARY KEY,
             from_addr TEXT,
@@ -167,6 +190,7 @@ app.post('/api/send', (req, res) => {
             res.status(400).json({"error": err.message});
             return;
         }
+        io.emit('messages_update');
         res.json({
             "message": "success",
             "data": msg,
@@ -183,6 +207,7 @@ app.delete('/api/messages/:id', (req, res) => {
             res.status(400).json({"error": err.message});
             return;
         }
+        io.emit('messages_update');
         res.json({"message": "deleted", "changes": this.changes});
     });
 });
@@ -194,6 +219,7 @@ app.delete('/api/messages', (req, res) => {
             res.status(400).json({"error": err.message});
             return;
         }
+        io.emit('messages_update');
         res.json({"message": "deleted", "changes": this.changes});
     });
 });
@@ -203,6 +229,13 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
-app.listen(PORT, () => {
+io.on('connection', (socket) => {
+    console.log('a user connected');
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
+});
+
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
