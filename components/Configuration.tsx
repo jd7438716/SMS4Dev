@@ -29,7 +29,7 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   onSaveWebhook
 }) => {
   const [activeTab, setActiveTab] = useState<'api' | 'signatures' | 'templates' | 'webhooks'>('api');
-  const { t } = useAppContext();
+  const { t, language } = useAppContext();
   
   // Local state for forms
   const [newSigText, setNewSigText] = useState('');
@@ -41,12 +41,21 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   const [webhookUrl, setWebhookUrl] = useState(webhookConfig.url);
   const [webhookEnabled, setWebhookEnabled] = useState(webhookConfig.enabled);
 
-  const PRESETS: Array<{ name: string, type: 'OTP' | 'Notification' | 'Marketing', content: string }> = [
+  const PRESETS_EN: Array<{ name: string, type: 'OTP' | 'Notification' | 'Marketing', content: string }> = [
     { name: 'OTP Code', type: 'OTP', content: 'Your verification code is ${code}. Valid for 5 minutes.' },
     { name: 'Welcome', type: 'Notification', content: 'Welcome to our service, ${name}! Thanks for joining.' },
     { name: 'Order Shipped', type: 'Notification', content: 'Your order #${orderId} has been shipped. Track it at ${link}.' },
     { name: 'Promo', type: 'Marketing', content: 'Flash Sale! Get 20% off with code ${promoCode}. Ends tonight.' },
   ];
+
+  const PRESETS_ZH: Array<{ name: string, type: 'OTP' | 'Notification' | 'Marketing', content: string }> = [
+    { name: '验证码', type: 'OTP', content: '您的验证码是 ${code}，5分钟内有效。' },
+    { name: '欢迎注册', type: 'Notification', content: '欢迎加入我们，${name}！感谢您的注册。' },
+    { name: '订单发货', type: 'Notification', content: '您的订单 #${orderId} 已发货。请点击 ${link} 查看物流。' },
+    { name: '限时优惠', type: 'Marketing', content: '限时大促！使用优惠码 ${promoCode} 享受8折优惠。今晚截止。' },
+  ];
+
+  const PRESETS = language === 'zh' ? PRESETS_ZH : PRESETS_EN;
 
   const handleFillPreset = (preset: typeof PRESETS[0]) => {
     setNewTplName(preset.name);
