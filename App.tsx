@@ -6,11 +6,12 @@ import { Configuration } from './components/Configuration';
 import { IntegrationDocs } from './components/IntegrationDocs';
 import { ApiLogs } from './components/ApiLogs';
 import { SmsMessage, SmsTemplate, SmsSignature, ApiCredential, ApiRequestLog, WebhookConfig } from './types';
-import { Server, Settings, Activity, Inbox, BookOpen, ScrollText } from 'lucide-react';
+import { Server, Settings, Activity, Inbox, BookOpen, ScrollText, Moon, Sun, Languages } from 'lucide-react';
+import { AppProvider, useAppContext } from './contexts/AppContext';
 
 const STORAGE_KEY = 'sms4dev_state_v3';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   // Data State
   const [messages, setMessages] = useState<SmsMessage[]>([]);
   const [templates, setTemplates] = useState<SmsTemplate[]>([]);
@@ -33,6 +34,9 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'inbox' | 'config' | 'docs' | 'logs'>('inbox');
   const [showSimulator, setShowSimulator] = useState(true);
 
+  // Contexts
+  const { theme, toggleTheme, language, setLanguage, t } = useAppContext();
+
   // Load initial state
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -44,7 +48,6 @@ const App: React.FC = () => {
         if (data.signatures) setSignatures(data.signatures);
         if (data.apiCredential) setApiCredential(data.apiCredential);
         if (data.webhookConfig) setWebhookConfig(data.webhookConfig);
-        // We don't load API logs from storage usually as they are transient, but could.
       } catch (e) {
         console.error("Failed to load state", e);
       }
@@ -95,11 +98,11 @@ const App: React.FC = () => {
   const selectedMessage = messages.find(m => m.id === selectedId) || null;
 
   return (
-    <div className="flex h-screen bg-gray-100 text-gray-900 font-sans overflow-hidden">
+    <div className="flex h-screen bg-gray-100 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans overflow-hidden transition-colors">
       
       {/* Sidebar Navigation */}
-      <aside className="w-16 bg-slate-900 flex flex-col items-center py-4 gap-6 shrink-0 z-20">
-         <div className="bg-blue-600 p-2 rounded-lg mb-2">
+      <aside className="w-16 bg-slate-900 dark:bg-slate-950 border-r border-slate-800 flex flex-col items-center py-4 gap-6 shrink-0 z-20">
+         <div className="bg-blue-600 p-2 rounded-lg mb-2 shadow-lg shadow-blue-900/50">
             <Server size={24} className="text-white" />
          </div>
          
@@ -107,28 +110,28 @@ const App: React.FC = () => {
             <button 
                 onClick={() => setCurrentView('inbox')}
                 className={`w-full p-3 flex justify-center transition-colors border-l-4 ${currentView === 'inbox' ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                title="Inbox"
+                title={t('nav.inbox')}
             >
                 <Inbox size={24} />
             </button>
             <button 
                 onClick={() => setCurrentView('logs')}
                 className={`w-full p-3 flex justify-center transition-colors border-l-4 ${currentView === 'logs' ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                title="API Logs"
+                title={t('nav.logs')}
             >
                 <ScrollText size={24} />
             </button>
             <button 
                 onClick={() => setCurrentView('config')}
                 className={`w-full p-3 flex justify-center transition-colors border-l-4 ${currentView === 'config' ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                title="Configuration"
+                title={t('nav.config')}
             >
                 <Settings size={24} />
             </button>
             <button 
                 onClick={() => setCurrentView('docs')}
                 className={`w-full p-3 flex justify-center transition-colors border-l-4 ${currentView === 'docs' ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                title="Documentation"
+                title={t('nav.docs')}
             >
                 <BookOpen size={24} />
             </button>
@@ -139,34 +142,53 @@ const App: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* Top Header */}
-        <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10">
-            <h1 className="font-bold text-lg text-gray-800 tracking-tight">
-                {currentView === 'inbox' && 'Inbox'}
-                {currentView === 'logs' && 'API Request Logs'}
-                {currentView === 'config' && 'Settings'}
-                {currentView === 'docs' && 'Documentation'}
+        <header className="h-14 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 z-10 transition-colors">
+            <h1 className="font-bold text-lg text-gray-800 dark:text-gray-100 tracking-tight">
+                {currentView === 'inbox' && t('nav.inbox')}
+                {currentView === 'logs' && t('nav.logs')}
+                {currentView === 'config' && t('nav.config')}
+                {currentView === 'docs' && t('nav.docs')}
             </h1>
 
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                
+                {/* Theme/Lang Controls */}
+                <div className="flex items-center gap-2 border-r border-gray-200 dark:border-slate-700 pr-4 mr-2">
+                   <button 
+                      onClick={toggleTheme} 
+                      className="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                      title="Toggle Theme"
+                   >
+                     {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                   </button>
+                   <button 
+                      onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+                      className="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-bold text-xs w-8 flex items-center justify-center"
+                      title="Switch Language"
+                   >
+                     {language === 'en' ? 'EN' : '中'}
+                   </button>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full border border-green-200 dark:border-green-900/30">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    Port: 2525
+                    {t('header.port')}: 2525
                 </div>
                 
                 {currentView === 'inbox' && (
                     <>
                         <button 
                             onClick={() => setShowSimulator(!showSimulator)}
-                            className={`p-2 rounded-md transition-colors ${showSimulator ? 'bg-slate-100 text-slate-800' : 'text-slate-400 hover:bg-slate-50'}`}
-                            title="Toggle Simulator"
+                            className={`p-2 rounded-md transition-colors ${showSimulator ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                            title={t('header.simulator')}
                         >
                             <Activity size={18} />
                         </button>
                         <button 
                             onClick={handleClearAll}
-                            className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-md border border-red-100 transition-colors"
+                            className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-md border border-red-100 dark:border-red-900/30 transition-colors"
                         >
-                            Clear All
+                            {t('header.clearAll')}
                         </button>
                     </>
                 )}
@@ -228,5 +250,13 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const App: React.FC = () => {
+    return (
+        <AppProvider>
+            <AppContent />
+        </AppProvider>
+    );
+}
 
 export default App;

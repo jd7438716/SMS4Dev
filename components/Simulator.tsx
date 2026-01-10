@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { generateMockSms } from '../services/geminiService';
 import { SmsMessage, SmsTemplate, SmsSignature, ApiRequestLog } from '../types';
-import { Send, Zap, RotateCcw, Loader2, Code2, AlertTriangle } from 'lucide-react';
+import { Send, Zap, RotateCcw, Loader2, Code2 } from 'lucide-react';
+import { useAppContext } from '../contexts/AppContext';
 
 const simpleId = () => Math.random().toString(36).substring(2, 9);
 const simpleReqId = () => `REQ-${Math.random().toString(36).substring(2, 12).toUpperCase()}`;
@@ -16,6 +17,7 @@ interface SimulatorProps {
 export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templates, signatures }) => {
   const [activeTab, setActiveTab] = useState<'manual' | 'api' | 'ai'>('manual');
   const [isGenerating, setIsGenerating] = useState(false);
+  const { t } = useAppContext();
   
   // Common
   const [phone, setPhone] = useState('+15550200');
@@ -94,7 +96,6 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
     if (!selectedTpl || !selectedSig) return;
 
     const tpl = templates.find(t => t.id === selectedTpl);
-    const sig = signatures.find(s => s.text === selectedSig);
     
     if(!tpl) return;
 
@@ -160,33 +161,33 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
   };
 
   return (
-    <div className="bg-white border-l border-gray-200 w-full md:w-80 flex-shrink-0 flex flex-col h-full">
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+    <div className="bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 w-full md:w-80 flex-shrink-0 flex flex-col h-full transition-colors">
+      <div className="p-4 border-b border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
           <Zap size={16} className="text-amber-500" />
-          Simulator
+          {t('simulator.title')}
         </h2>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 dark:border-slate-800">
         <button 
            onClick={() => setActiveTab('manual')}
-           className={`flex-1 py-2 text-xs font-medium ${activeTab === 'manual' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+           className={`flex-1 py-2 text-xs font-medium transition-colors ${activeTab === 'manual' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-white dark:bg-slate-800' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
         >
-           Raw Text
+           {t('simulator.rawTab')}
         </button>
         <button 
            onClick={() => setActiveTab('api')}
-           className={`flex-1 py-2 text-xs font-medium ${activeTab === 'api' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+           className={`flex-1 py-2 text-xs font-medium transition-colors ${activeTab === 'api' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-white dark:bg-slate-800' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
         >
-           API Mode
+           {t('simulator.apiTab')}
         </button>
         <button 
            onClick={() => setActiveTab('ai')}
-           className={`flex-1 py-2 text-xs font-medium ${activeTab === 'ai' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+           className={`flex-1 py-2 text-xs font-medium transition-colors ${activeTab === 'ai' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-white dark:bg-slate-800' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
         >
-           AI Gen
+           {t('simulator.aiTab')}
         </button>
       </div>
 
@@ -195,55 +196,55 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
         {/* API MODE */}
         {activeTab === 'api' && (
             <form onSubmit={handleApiSend} className="space-y-4">
-                 <div className="bg-blue-50 border border-blue-100 p-3 rounded text-xs text-blue-800">
-                    Simulates calling the cloud API (Outbound). Generates an API Log and an Outbound Message.
+                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-3 rounded text-xs text-blue-800 dark:text-blue-300">
+                    {t('simulator.apiDesc')}
                  </div>
 
                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">To Phone Number</label>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('simulator.toPhone')}</label>
                     <input 
                         type="text" 
                         value={phone}
                         onChange={e => setPhone(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md outline-none focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-md outline-none focus:border-blue-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Signature</label>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('simulator.signature')}</label>
                     <select 
                         value={selectedSig}
                         onChange={e => setSelectedSig(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md outline-none focus:border-blue-500 bg-white"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-md outline-none focus:border-blue-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                     >
-                        <option value="">Select Signature...</option>
+                        <option value="">{t('simulator.selectSignature')}</option>
                         {signatures.map(s => <option key={s.id} value={s.text}>{s.text}</option>)}
                     </select>
                 </div>
 
                 <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Template</label>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('simulator.template')}</label>
                     <select 
                         value={selectedTpl}
                         onChange={e => setSelectedTpl(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md outline-none focus:border-blue-500 bg-white"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-md outline-none focus:border-blue-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                     >
-                        <option value="">Select Template...</option>
+                        <option value="">{t('simulator.selectTemplate')}</option>
                         {templates.map(t => <option key={t.id} value={t.id}>{t.name} ({t.id})</option>)}
                     </select>
                 </div>
 
                 {Object.keys(tplParams).length > 0 && (
-                    <div className="bg-gray-50 p-3 rounded border border-gray-200 space-y-3">
-                        <label className="block text-xs font-bold text-gray-500 uppercase">Template Params</label>
+                    <div className="bg-gray-50 dark:bg-slate-800 p-3 rounded border border-gray-200 dark:border-slate-700 space-y-3">
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">{t('simulator.templateParams')}</label>
                         {Object.keys(tplParams).map(key => (
                             <div key={key}>
-                                <label className="block text-xs text-gray-600 mb-1">${`{${key}}`}</label>
+                                <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">${`{${key}}`}</label>
                                 <input 
                                     type="text"
                                     value={tplParams[key]}
                                     onChange={e => setTplParams({...tplParams, [key]: e.target.value})} 
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-white"
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                                 />
                             </div>
                         ))}
@@ -251,14 +252,14 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
                 )}
 
                 <div className="pt-2">
-                    <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                    <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
                         <input 
                             type="checkbox" 
                             checked={simulateError}
                             onChange={e => setSimulateError(e.target.checked)}
-                            className="text-red-600 rounded" 
+                            className="text-red-600 rounded bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600" 
                         />
-                        Simulate API Error (e.g. Rate Limit)
+                        {t('simulator.simulateError')}
                     </label>
                 </div>
 
@@ -267,7 +268,7 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
                     className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium transition-all"
                 >
                     <Code2 size={16} />
-                    Send via API
+                    {t('simulator.sendApi')}
                 </button>
             </form>
         )}
@@ -275,33 +276,33 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
         {/* MANUAL MODE */}
         {activeTab === 'manual' && (
             <form onSubmit={handleManualSend} className="space-y-4">
-                <div className="bg-gray-50 border border-gray-200 p-3 rounded text-xs text-gray-600">
-                    Injects raw text directly into the inbox (Inbound). Useful for testing receiving logic.
+                <div className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-3 rounded text-xs text-gray-600 dark:text-gray-300">
+                    {t('simulator.manualDesc')}
                 </div>
                 <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">From Number</label>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('simulator.fromNumber')}</label>
                     <input 
                         type="text" 
-                        value={phone} // Reusing phone state for simplicity, normally would be 'from'
+                        value={phone} // Reusing phone state for simplicity
                         onChange={e => setPhone(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md outline-none focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-md outline-none focus:border-blue-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                     />
                 </div>
                 <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Message Body</label>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('simulator.msgBody')}</label>
                     <textarea 
                         rows={4}
                         value={manualBody}
                         onChange={e => setManualBody(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md outline-none resize-none focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-700 rounded-md outline-none resize-none focus:border-blue-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                     ></textarea>
                 </div>
                 <button
                     type="submit"
-                    className="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-md text-sm font-medium transition-all"
+                    className="w-full flex items-center justify-center gap-2 bg-gray-900 dark:bg-slate-700 hover:bg-gray-800 dark:hover:bg-slate-600 text-white py-2 px-4 rounded-md text-sm font-medium transition-all"
                 >
                     <Send size={16} />
-                    Inject Inbound SMS
+                    {t('simulator.injectInbound')}
                 </button>
             </form>
         )}
@@ -309,8 +310,8 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
         {/* AI MODE */}
         {activeTab === 'ai' && (
             <div className="space-y-3">
-                <div className="bg-purple-50 border border-purple-100 p-3 rounded text-xs text-purple-800">
-                    Uses Gemini AI to dream up realistic SMS traffic patterns for bulk testing.
+                <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 p-3 rounded text-xs text-purple-800 dark:text-purple-300">
+                    {t('simulator.aiDesc')}
                 </div>
                 <button
                     onClick={handleGenerate}
@@ -318,7 +319,7 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-2.5 px-4 rounded-md text-sm font-medium transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                     {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />}
-                    {isGenerating ? 'Generating...' : 'Generate Random Traffic'}
+                    {isGenerating ? t('simulator.generating') : t('simulator.generate')}
                 </button>
             </div>
         )}
@@ -326,8 +327,8 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
       </div>
       
       {/* Footer info */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50 text-xs text-gray-400 text-center">
-        Mock Server Listening on Port 2525
+      <div className="p-4 border-t border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900 text-xs text-gray-400 dark:text-gray-500 text-center">
+        {t('simulator.footer')}
       </div>
     </div>
   );

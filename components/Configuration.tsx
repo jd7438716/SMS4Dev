@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SmsTemplate, SmsSignature, ApiCredential, WebhookConfig } from '../types';
 import { Plus, Trash2, Key, Shield, FileText, CheckCircle, Clock, Copy, RefreshCw, Network } from 'lucide-react';
+import { useAppContext } from '../contexts/AppContext';
 
 interface ConfigurationProps {
   templates: SmsTemplate[];
@@ -28,6 +29,7 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   onSaveWebhook
 }) => {
   const [activeTab, setActiveTab] = useState<'api' | 'signatures' | 'templates' | 'webhooks'>('api');
+  const { t } = useAppContext();
   
   // Local state for forms
   const [newSigText, setNewSigText] = useState('');
@@ -73,38 +75,38 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-50 overflow-hidden">
-      <div className="bg-white border-b border-gray-200 px-8 py-6">
-        <h1 className="text-2xl font-bold text-gray-900">Service Configuration</h1>
-        <p className="text-gray-500 mt-1">Manage your cloud SMS settings, signatures, templates, and webhooks.</p>
+    <div className="flex-1 flex flex-col h-full bg-gray-50 dark:bg-slate-950 overflow-hidden transition-colors">
+      <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-8 py-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('config.title')}</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">{t('config.subtitle')}</p>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar for Config */}
-        <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+        <div className="w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col">
           <button 
              onClick={() => setActiveTab('api')}
-             className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 ${activeTab === 'api' ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}
+             className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 transition-colors ${activeTab === 'api' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-r-4 border-blue-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
-             <Key size={18} /> API Credentials
+             <Key size={18} /> {t('config.tabs.api')}
           </button>
           <button 
              onClick={() => setActiveTab('signatures')}
-             className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 ${activeTab === 'signatures' ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}
+             className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 transition-colors ${activeTab === 'signatures' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-r-4 border-blue-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
-             <Shield size={18} /> Signatures
+             <Shield size={18} /> {t('config.tabs.signatures')}
           </button>
           <button 
              onClick={() => setActiveTab('templates')}
-             className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 ${activeTab === 'templates' ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}
+             className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 transition-colors ${activeTab === 'templates' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-r-4 border-blue-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
-             <FileText size={18} /> Templates
+             <FileText size={18} /> {t('config.tabs.templates')}
           </button>
           <button 
              onClick={() => setActiveTab('webhooks')}
-             className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 ${activeTab === 'webhooks' ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}
+             className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 transition-colors ${activeTab === 'webhooks' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-r-4 border-blue-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
-             <Network size={18} /> Webhooks
+             <Network size={18} /> {t('config.tabs.webhooks')}
           </button>
         </div>
 
@@ -115,36 +117,36 @@ export const Configuration: React.FC<ConfigurationProps> = ({
               {/* API KEY TAB */}
               {activeTab === 'api' && (
                 <div className="space-y-6">
-                   <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                   <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
                       <div className="flex justify-between items-start mb-6">
                         <div>
-                          <h3 className="text-lg font-medium text-gray-900">Access Keys</h3>
-                          <p className="text-sm text-gray-500">Use these keys to authenticate your API requests.</p>
+                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('config.api.accessKeys')}</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{t('config.api.desc')}</p>
                         </div>
-                        <button onClick={onRegenerateKeys} className="text-sm text-blue-600 hover:underline flex items-center gap-1">
-                           <RefreshCw size={14} /> Regenerate
+                        <button onClick={onRegenerateKeys} className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                           <RefreshCw size={14} /> {t('config.api.regenerate')}
                         </button>
                       </div>
 
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Access Key ID</label>
+                          <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{t('config.api.keyId')}</label>
                           <div className="flex items-center gap-2">
-                             <code className="bg-gray-100 px-3 py-2 rounded text-sm font-mono flex-1 border border-gray-200 select-all">
+                             <code className="bg-gray-100 dark:bg-slate-800 px-3 py-2 rounded text-sm font-mono flex-1 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200 select-all">
                                {apiCredential.accessKeyId}
                              </code>
-                             <button className="p-2 text-gray-400 hover:text-gray-600" onClick={() => navigator.clipboard.writeText(apiCredential.accessKeyId)}>
+                             <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" onClick={() => navigator.clipboard.writeText(apiCredential.accessKeyId)}>
                                <Copy size={16} />
                              </button>
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Access Key Secret</label>
+                          <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{t('config.api.secret')}</label>
                           <div className="flex items-center gap-2">
-                             <code className="bg-gray-100 px-3 py-2 rounded text-sm font-mono flex-1 border border-gray-200 select-all">
+                             <code className="bg-gray-100 dark:bg-slate-800 px-3 py-2 rounded text-sm font-mono flex-1 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-gray-200 select-all">
                                {apiCredential.accessKeySecret}
                              </code>
-                             <button className="p-2 text-gray-400 hover:text-gray-600" onClick={() => navigator.clipboard.writeText(apiCredential.accessKeySecret)}>
+                             <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" onClick={() => navigator.clipboard.writeText(apiCredential.accessKeySecret)}>
                                <Copy size={16} />
                              </button>
                           </div>
@@ -152,10 +154,10 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                       </div>
                    </div>
 
-                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                     <h4 className="font-medium text-blue-900 mb-2">Development Mode</h4>
-                     <p className="text-sm text-blue-800">
-                       These credentials are for the local mock server only. Do not use them in production environments.
+                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-lg p-4">
+                     <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">{t('config.api.devMode')}</h4>
+                     <p className="text-sm text-blue-800 dark:text-blue-400">
+                       {t('config.api.devModeDesc')}
                      </p>
                    </div>
                 </div>
@@ -164,10 +166,10 @@ export const Configuration: React.FC<ConfigurationProps> = ({
               {/* WEBHOOKS TAB */}
               {activeTab === 'webhooks' && (
                 <div className="space-y-6">
-                   <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Delivery Status Callback</h3>
-                      <p className="text-sm text-gray-600 mb-6">
-                        Configure a URL to receive HTTP POST requests when message status changes (e.g. Delivered, Failed).
+                   <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('config.webhooks.title')}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                        {t('config.webhooks.desc')}
                       </p>
                       
                       <div className="space-y-4">
@@ -177,36 +179,36 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                               id="webhook-enable"
                               checked={webhookEnabled}
                               onChange={e => setWebhookEnabled(e.target.checked)}
-                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                              className="rounded border-gray-300 dark:border-slate-700 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-slate-800"
                            />
-                           <label htmlFor="webhook-enable" className="text-sm font-medium text-gray-700">Enable Webhook Callbacks</label>
+                           <label htmlFor="webhook-enable" className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('config.webhooks.enable')}</label>
                         </div>
 
                         <div>
-                           <label className="block text-xs font-medium text-gray-700 mb-1">Endpoint URL</label>
+                           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('config.webhooks.endpoint')}</label>
                            <input 
                               type="text" 
                               value={webhookUrl}
                               onChange={e => setWebhookUrl(e.target.value)}
                               placeholder="http://localhost:8080/sms/callback"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                            />
                         </div>
 
                         <div className="pt-4 flex justify-end">
                            <button 
                               onClick={handleSaveWebhook}
-                              className="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800"
+                              className="bg-gray-900 dark:bg-slate-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 dark:hover:bg-slate-600"
                            >
-                              Save Configuration
+                              {t('config.webhooks.save')}
                            </button>
                         </div>
                       </div>
                    </div>
 
-                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Example Payload</h4>
-                      <pre className="text-xs font-mono text-gray-700 bg-white p-3 rounded border border-gray-200 overflow-x-auto">
+                   <div className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4">
+                      <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">{t('config.webhooks.example')}</h4>
+                      <pre className="text-xs font-mono text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-900 p-3 rounded border border-gray-200 dark:border-slate-700 overflow-x-auto">
 {`{
   "event": "sms.status.update",
   "messageId": "msg_123456789",
@@ -221,43 +223,43 @@ export const Configuration: React.FC<ConfigurationProps> = ({
               {/* SIGNATURES TAB */}
               {activeTab === 'signatures' && (
                 <div className="space-y-6">
-                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Add Signature</h3>
+                  <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('config.sig.add')}</h3>
                     <form onSubmit={handleAddSig} className="flex gap-4">
                       <input 
                         type="text" 
-                        placeholder="e.g. MyCompany" 
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder={t('config.sig.placeholder')}
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                         value={newSigText}
                         onChange={e => setNewSigText(e.target.value)}
                         maxLength={12}
                       />
                       <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
-                        <Plus size={16} /> Add
+                        <Plus size={16} /> {t('config.sig.add')}
                       </button>
                     </form>
                   </div>
 
-                  <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
                      <table className="w-full text-sm text-left">
-                       <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+                       <thead className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-slate-700">
                          <tr>
-                           <th className="px-6 py-3">Signature Text</th>
-                           <th className="px-6 py-3">Status</th>
-                           <th className="px-6 py-3 text-right">Actions</th>
+                           <th className="px-6 py-3">{t('config.sig.text')}</th>
+                           <th className="px-6 py-3">{t('config.sig.status')}</th>
+                           <th className="px-6 py-3 text-right">{t('config.sig.actions')}</th>
                          </tr>
                        </thead>
-                       <tbody className="divide-y divide-gray-100">
+                       <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
                          {signatures.map(sig => (
-                           <tr key={sig.id} className="hover:bg-gray-50">
-                             <td className="px-6 py-4 font-medium text-gray-900">{sig.text}</td>
+                           <tr key={sig.id} className="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+                             <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">{sig.text}</td>
                              <td className="px-6 py-4">
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
                                   <CheckCircle size={12} /> {sig.status}
                                 </span>
                              </td>
                              <td className="px-6 py-4 text-right">
-                               <button onClick={() => onDeleteSignature(sig.id)} className="text-red-600 hover:text-red-900 p-1">
+                               <button onClick={() => onDeleteSignature(sig.id)} className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1">
                                  <Trash2 size={16} />
                                </button>
                              </td>
@@ -265,7 +267,7 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                          ))}
                          {signatures.length === 0 && (
                            <tr>
-                             <td colSpan={3} className="px-6 py-8 text-center text-gray-400 italic">No signatures configured</td>
+                             <td colSpan={3} className="px-6 py-8 text-center text-gray-400 dark:text-gray-500 italic">{t('config.sig.noSig')}</td>
                            </tr>
                          )}
                        </tbody>
@@ -277,47 +279,47 @@ export const Configuration: React.FC<ConfigurationProps> = ({
               {/* TEMPLATES TAB */}
               {activeTab === 'templates' && (
                  <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Create Template</h3>
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('config.tpl.create')}</h3>
                       <form onSubmit={handleAddTpl} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Template Name</label>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('config.tpl.name')}</label>
                             <input 
                               type="text" 
                               value={newTplName}
                               onChange={e => setNewTplName(e.target.value)}
                               placeholder="e.g. Verification Code"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('config.tpl.type')}</label>
                             <select 
                               value={newTplType}
                               onChange={e => setNewTplType(e.target.value as any)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                             >
-                              <option value="OTP">Authentication (OTP)</option>
-                              <option value="Notification">Notification</option>
-                              <option value="Marketing">Marketing</option>
+                              <option value="OTP">{t('config.tpl.otp')}</option>
+                              <option value="Notification">{t('config.tpl.notif')}</option>
+                              <option value="Marketing">{t('config.tpl.marketing')}</option>
                             </select>
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Content Pattern</label>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('config.tpl.content')}</label>
                           <textarea 
                              rows={2}
                              value={newTplContent}
                              onChange={e => setNewTplContent(e.target.value)}
-                             placeholder="Your verification code is ${code}. Valid for 5 minutes."
-                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                             placeholder={t('config.tpl.placeholderContent')}
+                             className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                           />
-                          <p className="text-xs text-gray-500 mt-1">Use <code>{'${variable}'}</code> for dynamic content.</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Use <code>{'${variable}'}</code> for dynamic content.</p>
                         </div>
                         <div className="flex justify-end">
                            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
-                              <Plus size={16} /> Create Template
+                              <Plus size={16} /> {t('config.tpl.create')}
                            </button>
                         </div>
                       </form>
@@ -325,16 +327,16 @@ export const Configuration: React.FC<ConfigurationProps> = ({
 
                     <div className="space-y-4">
                       {templates.map(tpl => (
-                        <div key={tpl.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div key={tpl.id} className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                            <div className="flex justify-between items-start mb-2">
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <h4 className="font-bold text-gray-900">{tpl.name}</h4>
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">{tpl.id}</span>
+                                  <h4 className="font-bold text-gray-900 dark:text-gray-100">{tpl.name}</h4>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-gray-200 dark:border-slate-700">{tpl.id}</span>
                                 </div>
                                 <span className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${
-                                  tpl.type === 'OTP' ? 'bg-indigo-100 text-indigo-700' :
-                                  tpl.type === 'Marketing' ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-700'
+                                  tpl.type === 'OTP' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' :
+                                  tpl.type === 'Marketing' ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                                 }`}>
                                   {tpl.type}
                                 </span>
@@ -343,18 +345,18 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                                 <Trash2 size={16} />
                               </button>
                            </div>
-                           <div className="bg-gray-50 p-3 rounded border border-gray-100 font-mono text-sm text-gray-700 break-words">
+                           <div className="bg-gray-50 dark:bg-slate-800 p-3 rounded border border-gray-100 dark:border-slate-700 font-mono text-sm text-gray-700 dark:text-gray-300 break-words">
                              {tpl.content}
                            </div>
-                           <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
+                           <div className="mt-3 flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
                               <span className="flex items-center gap-1"><CheckCircle size={12} className="text-green-500"/> Approved</span>
                               <span className="flex items-center gap-1"><Clock size={12} /> {new Date(tpl.created).toLocaleDateString()}</span>
                            </div>
                         </div>
                       ))}
                       {templates.length === 0 && (
-                        <div className="text-center py-8 text-gray-400 italic bg-white rounded-lg border border-dashed border-gray-300">
-                           No templates defined.
+                        <div className="text-center py-8 text-gray-400 dark:text-gray-500 italic bg-white dark:bg-slate-900 rounded-lg border border-dashed border-gray-300 dark:border-slate-700">
+                           {t('config.tpl.noTpl')}
                         </div>
                       )}
                     </div>
