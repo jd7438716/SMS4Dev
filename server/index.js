@@ -39,6 +39,22 @@ const db = new sqlite3.Database(dbPath, (err) => {
             templateId TEXT,
             requestId TEXT
         )`);
+
+        db.run(`CREATE TABLE IF NOT EXISTS templates (
+            id TEXT PRIMARY KEY,
+            name TEXT,
+            content TEXT,
+            type TEXT,
+            status TEXT,
+            created TEXT
+        )`);
+
+        db.run(`CREATE TABLE IF NOT EXISTS signatures (
+            id TEXT PRIMARY KEY,
+            text TEXT,
+            status TEXT,
+            created TEXT
+        )`);
     }
 });
 
@@ -46,6 +62,55 @@ const db = new sqlite3.Database(dbPath, (err) => {
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
 // API Routes
+
+// --- TEMPLATES ---
+app.get('/api/templates', (req, res) => {
+    db.all("SELECT * FROM templates ORDER BY created DESC", [], (err, rows) => {
+        if (err) return res.status(500).json({error: err.message});
+        res.json(rows);
+    });
+});
+
+app.post('/api/templates', (req, res) => {
+    const { id, name, content, type, status, created } = req.body;
+    const sql = "INSERT INTO templates (id, name, content, type, status, created) VALUES (?, ?, ?, ?, ?, ?)";
+    db.run(sql, [id, name, content, type, status, created], function(err) {
+        if (err) return res.status(500).json({error: err.message});
+        res.json({ id, name, content, type, status, created });
+    });
+});
+
+app.delete('/api/templates/:id', (req, res) => {
+    db.run("DELETE FROM templates WHERE id = ?", [req.params.id], function(err) {
+        if (err) return res.status(500).json({error: err.message});
+        res.json({ message: "Deleted", changes: this.changes });
+    });
+});
+
+// --- SIGNATURES ---
+app.get('/api/signatures', (req, res) => {
+    db.all("SELECT * FROM signatures ORDER BY created DESC", [], (err, rows) => {
+        if (err) return res.status(500).json({error: err.message});
+        res.json(rows);
+    });
+});
+
+app.post('/api/signatures', (req, res) => {
+    const { id, text, status, created } = req.body;
+    const sql = "INSERT INTO signatures (id, text, status, created) VALUES (?, ?, ?, ?)";
+    const createdDate = created || new Date().toISOString();
+    db.run(sql, [id, text, status, createdDate], function(err) {
+        if (err) return res.status(500).json({error: err.message});
+        res.json({ id, text, status, created: createdDate });
+    });
+});
+
+app.delete('/api/signatures/:id', (req, res) => {
+    db.run("DELETE FROM signatures WHERE id = ?", [req.params.id], function(err) {
+        if (err) return res.status(500).json({error: err.message});
+        res.json({ message: "Deleted", changes: this.changes });
+    });
+});
 
 // Get all messages
 app.get('/api/messages', (req, res) => {
