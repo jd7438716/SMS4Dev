@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SmsTemplate, SmsSignature, ApiCredential, WebhookConfig } from '../types';
-import { Plus, Trash2, Key, Shield, FileText, CheckCircle, Clock, Copy, RefreshCw, Network } from 'lucide-react';
+import { Plus, Trash2, Key, Shield, FileText, CheckCircle, Clock, Copy, RefreshCw, Network, Zap } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 
 interface ConfigurationProps {
@@ -40,6 +40,32 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   // Webhook form state
   const [webhookUrl, setWebhookUrl] = useState(webhookConfig.url);
   const [webhookEnabled, setWebhookEnabled] = useState(webhookConfig.enabled);
+
+  const PRESETS: Array<{ name: string, type: 'OTP' | 'Notification' | 'Marketing', content: string }> = [
+    { name: 'OTP Code', type: 'OTP', content: 'Your verification code is ${code}. Valid for 5 minutes.' },
+    { name: 'Welcome', type: 'Notification', content: 'Welcome to our service, ${name}! Thanks for joining.' },
+    { name: 'Order Shipped', type: 'Notification', content: 'Your order #${orderId} has been shipped. Track it at ${link}.' },
+    { name: 'Promo', type: 'Marketing', content: 'Flash Sale! Get 20% off with code ${promoCode}. Ends tonight.' },
+  ];
+
+  const handleFillPreset = (preset: typeof PRESETS[0]) => {
+    setNewTplName(preset.name);
+    setNewTplType(preset.type);
+    setNewTplContent(preset.content);
+  };
+
+  const handleAddDefaults = () => {
+     PRESETS.forEach(preset => {
+        onAddTemplate({
+          id: `TPL${Math.floor(Math.random()*100000)}`,
+          name: preset.name,
+          content: preset.content,
+          type: preset.type,
+          status: 'approved',
+          created: new Date().toISOString()
+        });
+     });
+  };
 
   const handleAddSig = (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,7 +306,31 @@ export const Configuration: React.FC<ConfigurationProps> = ({
               {activeTab === 'templates' && (
                  <div className="space-y-6">
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('config.tpl.create')}</h3>
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('config.tpl.create')}</h3>
+                        <button
+                          type="button"
+                          onClick={handleAddDefaults}
+                          className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-full text-xs text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/50 transition-colors whitespace-nowrap flex items-center gap-1"
+                        >
+                          <Zap size={12} /> {t('config.tpl.addDefaults')}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                        <span className="text-xs font-semibold text-gray-500 uppercase whitespace-nowrap mr-1">{t('config.tpl.presets')}:</span>
+                        {PRESETS.map((p, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => handleFillPreset(p)}
+                            className="px-3 py-1 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full text-xs text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700 transition-colors whitespace-nowrap"
+                          >
+                            {p.name}
+                          </button>
+                        ))}
+                      </div>
+
                       <form onSubmit={handleAddTpl} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
@@ -368,3 +418,4 @@ export const Configuration: React.FC<ConfigurationProps> = ({
     </div>
   );
 };
+

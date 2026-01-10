@@ -108,6 +108,8 @@ export const translations = {
         otp: "Authentication (OTP)",
         notif: "Notification",
         marketing: "Marketing",
+        presets: "Presets",
+        addDefaults: "Add Defaults",
         noTpl: "No templates defined"
       },
       webhooks: {
@@ -241,7 +243,10 @@ export const translations = {
         otp: "验证码 (OTP)",
         notif: "通知短信",
         marketing: "营销短信",
-        noTpl: "暂无定义模版"
+        noTpl: "暂无定义模版",
+        presets: "快速预设",
+        usePreset: "填充",
+        addDefaults: "批量添加默认模版"
       },
       webhooks: {
         title: "投递状态回调",
