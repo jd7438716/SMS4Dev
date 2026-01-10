@@ -1,0 +1,5 @@
+node_modules
+dist
+server/messages.db
+server/data
+.env

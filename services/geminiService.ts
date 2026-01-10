@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { SmsMessage } from "../types";
 
 // Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: "YOUR_API_KEY" });
 
 /**
  * Generates realistic mock SMS traffic for testing.
