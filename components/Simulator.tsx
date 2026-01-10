@@ -7,6 +7,8 @@ import { useAppContext } from '../contexts/AppContext';
 const simpleId = () => Math.random().toString(36).substring(2, 9);
 const simpleReqId = () => `REQ-${Math.random().toString(36).substring(2, 12).toUpperCase()}`;
 
+const isValidPhone = (p: string) => /^\+?[0-9]{7,15}$/.test(p);
+
 interface SimulatorProps {
   onReceive: (msgs: SmsMessage[]) => void;
   onLogApi: (log: ApiRequestLog) => void;
@@ -74,6 +76,10 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
   const handleManualSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualBody.trim()) return;
+    if (!isValidPhone(phone)) {
+      alert("Invalid Phone Number");
+      return;
+    }
 
     const msg: SmsMessage = {
       id: simpleId(),
@@ -94,6 +100,10 @@ export const Simulator: React.FC<SimulatorProps> = ({ onReceive, onLogApi, templ
   const handleApiSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTpl || !selectedSig) return;
+    if (!isValidPhone(phone)) {
+      alert("Invalid Phone Number");
+      return;
+    }
 
     const tpl = templates.find(t => t.id === selectedTpl);
     

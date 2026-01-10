@@ -88,6 +88,10 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   const handleAddSig = (e: React.FormEvent) => {
     e.preventDefault();
     if(!newSigText) return;
+    if(newSigText.length > 20) {
+        alert("Signature too long (max 20 chars)");
+        return;
+    }
     onAddSignature({
       id: Math.random().toString(36).substr(2, 9),
       text: newSigText,
@@ -99,6 +103,15 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   const handleAddTpl = (e: React.FormEvent) => {
     e.preventDefault();
     if(!newTplName || !newTplContent) return;
+
+    if(newTplName.length > 50) {
+        alert("Template name too long (max 50 chars)");
+        return;
+    }
+    if(newTplContent.length > 500) {
+        alert("Template content too long (max 500 chars)");
+        return;
+    }
 
     if (editingTemplateId) {
       const existing = templates.find(t => t.id === editingTemplateId);
@@ -141,6 +154,14 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   };
 
   const handleSaveWebhook = () => {
+    if (webhookEnabled && webhookUrl) {
+         try {
+             new URL(webhookUrl);
+         } catch (_) {
+             alert("Invalid Webhook URL");
+             return;
+         }
+    }
     onSaveWebhook({
       url: webhookUrl,
       enabled: webhookEnabled

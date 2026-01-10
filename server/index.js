@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require("socket.io");
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { body, validationResult } = require('express-validator');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
@@ -95,6 +96,14 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Helper to generate ID
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
+const validateRequest = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+};
+
 // API Routes
 
 // --- LOGS ---
@@ -113,7 +122,14 @@ app.get('/api/logs', (req, res) => {
     });
 });
 
-app.post('/api/logs', (req, res) => {
+app.post('/api/logs', [
+    body('requestId').isString().notEmpty(),
+    body('timestamp').isISO8601(),
+    body('method').isString(),
+    body('endpoint').isString(),
+    body('statusCode').isInt(),
+    body('latency').isInt()
+], validateRequest, (req, res) => {
     const { requestId, timestamp, method, endpoint, statusCode, latency, requestBody, responseBody } = req.body;
     console.log(`[LOG] ${method} ${endpoint} - ${statusCode}`);
     const sql = "INSERT INTO logs (requestId, timestamp, method, endpoint, statusCode, latency, requestBody, responseBody) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -135,7 +151,14 @@ app.get('/api/templates', (req, res) => {
     });
 });
 
-app.post('/api/templates', (req, res) => {
+app.post('/api/templates', [
+    body('id').isString().notEmpty(),
+    body('name').isString().trim().notEmpty().isLength({ max: 50 }),
+    body('content').isString().trim().notEmpty().isLength({ max: 500 }),
+    body('type').isIn(['OTP', 'Notification', 'Marketing']),
+    body('status').isString(),
+    body('created').optional().isISO8601()
+], validateRequest, (req, res) => {
     console.log('[API] POST /api/templates');
     const { id, name, content, type, status, created } = req.body;
     const sql = "INSERT INTO templates (id, name, content, type, status, created) VALUES (?, ?, ?, ?, ?, ?)";
@@ -146,7 +169,12 @@ app.post('/api/templates', (req, res) => {
     });
 });
 
-app.put('/api/templates/:id', (req, res) => {
+app.put('/api/templates/:id', [
+    body('name').isString().trim().notEmpty().isLength({ max: 50 }),
+    body('content').isString().trim().notEmpty().isLength({ max: 500 }),
+    body('type').isIn(['OTP', 'Notification', 'Marketing']),
+    body('status').isString()
+], validateRequest, (req, res) => {
     console.log(`[API] PUT /api/templates/${req.params.id}`);
     const { name, content, type, status } = req.body;
     const sql = "UPDATE templates SET name = ?, content = ?, type = ?, status = ? WHERE id = ?";
@@ -173,7 +201,12 @@ app.get('/api/signatures', (req, res) => {
     });
 });
 
-app.post('/api/signatures', (req, res) => {
+app.post('/api/signatures', [
+    body('id').isString().notEmpty(),
+    body('text').isString().trim().notEmpty().isLength({ max: 20 }),
+    body('status').isString(),
+    body('created').optional().isISO8601()
+], validateRequest, (req, res) => {
     console.log('[API] POST /api/signatures');
     const { id, text, status, created } = req.body;
     const sql = "INSERT INTO signatures (id, text, status, created) VALUES (?, ?, ?, ?)";
@@ -222,7 +255,13 @@ app.get('/api/messages', (req, res) => {
 });
 
 // Send a message (simulated)
-app.post('/api/send', (req, res) => {
+app.post('/api/send', [
+    body('to').isString().trim().notEmpty().matches(/^\+?[0-9]{7,15}$/), // Basic phone validation
+    body('body').isString().trim().notEmpty().isLength({ max: 1000 }),
+    body('from').optional().isString().trim().isLength({ max: 20 }),
+    body('direction').optional().isIn(['inbound', 'outbound']),
+    body('status').optional().isString()
+], validateRequest, (req, res) => {
     console.log('[API] POST /api/send');
     const { to, body, from, direction, status } = req.body;
     
