@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { MessageList } from './components/MessageList';
 import { MessageDetail } from './components/MessageDetail';
 import { Simulator } from './components/Simulator';
@@ -7,8 +7,9 @@ import { Configuration } from './components/Configuration';
 import { IntegrationDocs } from './components/IntegrationDocs';
 import { ApiLogs } from './components/ApiLogs';
 import { SmsMessage, SmsTemplate, SmsSignature, ApiCredential, ApiRequestLog, WebhookConfig } from './types';
-import { Server, Settings, Activity, Inbox, BookOpen, ScrollText, Moon, Sun, Languages } from 'lucide-react';
+import { Server, Settings, Activity, Inbox, BookOpen, ScrollText, Moon, Sun, Languages, ChevronRight } from 'lucide-react';
 import { AppProvider, useAppContext } from './contexts/AppContext';
+import { io } from 'socket.io-client';
 
 const STORAGE_KEY = 'sms4dev_state_v3';
 
@@ -59,8 +60,16 @@ const AppContent: React.FC = () => {
     fetchTemplates();
     fetchSignatures();
 
-    const interval = setInterval(fetchMessages, 2000);
-    return () => clearInterval(interval);
+    // Socket.IO connection
+    const socket = io();
+    socket.on('connect', () => console.log('Socket connected'));
+    socket.on('messages_update', fetchMessages);
+    socket.on('templates_update', fetchTemplates);
+    socket.on('signatures_update', fetchSignatures);
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const fetchMessages = async () => {
@@ -207,29 +216,29 @@ const AppContent: React.FC = () => {
          
          <nav className="flex flex-col gap-4 w-full">
             <button 
-                onClick={() => navigate('/inbox')}
-                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${currentView === 'inbox' ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                onClick={() => navigate('/messages/inbox')}
+                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${location.pathname.includes('/messages') ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
                 title={t('nav.inbox')}
             >
                 <Inbox size={24} />
             </button>
             <button 
-                onClick={() => navigate('/logs')}
-                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${currentView === 'logs' ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                onClick={() => navigate('/server/logs')}
+                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${location.pathname.includes('/server/logs') ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
                 title={t('nav.logs')}
             >
                 <ScrollText size={24} />
             </button>
             <button 
-                onClick={() => navigate('/config')}
-                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${currentView === 'config' ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                onClick={() => navigate('/server/config')}
+                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${location.pathname.includes('/server/config') ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
                 title={t('nav.config')}
             >
                 <Settings size={24} />
             </button>
             <button 
-                onClick={() => navigate('/docs')}
-                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${currentView === 'docs' ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                onClick={() => navigate('/docs/integration')}
+                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${location.pathname.includes('/docs') ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
                 title={t('nav.docs')}
             >
                 <BookOpen size={24} />
@@ -297,7 +306,7 @@ const AppContent: React.FC = () => {
         {/* Content */}
         <div className="flex-1 flex overflow-hidden">
             <Routes>
-                <Route path="/inbox" element={
+                <Route path="/messages/inbox" element={
                     <>
                         <MessageList 
                             messages={messages} 
@@ -321,9 +330,9 @@ const AppContent: React.FC = () => {
                     </>
                 } />
                 
-                <Route path="/logs" element={<ApiLogs logs={apiLogs} />} />
+                <Route path="/server/logs" element={<ApiLogs logs={apiLogs} />} />
                 
-                <Route path="/config" element={
+                <Route path="/server/config" element={
                     <Configuration 
                         templates={templates}
                         signatures={signatures}
@@ -338,9 +347,9 @@ const AppContent: React.FC = () => {
                     />
                 } />
                 
-                <Route path="/docs" element={<IntegrationDocs apiCredential={apiCredential} />} />
+                <Route path="/docs/integration" element={<IntegrationDocs apiCredential={apiCredential} />} />
                 
-                <Route path="*" element={<Navigate to="/inbox" replace />} />
+                <Route path="*" element={<Navigate to="/messages/inbox" replace />} />
             </Routes>
         </div>
       </div>
