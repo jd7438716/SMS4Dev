@@ -20,6 +20,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 阿里云容器镜像服务 (ACR) 配置
+      - name: Login to Aliyun ACR
+        uses: docker/login-action@v3
+        with:
+          registry: crpi-24eqfvp93x6tspe9.cn-shenzhen.personal.cr.aliyuncs.com
+          username: ${{ secrets.ALIYUN_USERNAME }}
+          password: ${{ secrets.ALIYUN_PASSWORD }}
+
       - name: Get current date
         id: date
         run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
@@ -34,3 +42,5 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/sms4dev:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/sms4dev:${{ steps.date.outputs.date }}
             ${{ secrets.DOCKERHUB_USERNAME }}/sms4dev:${{ steps.date.outputs.date }}-${{ github.run_number }}
+            crpi-24eqfvp93x6tspe9.cn-shenzhen.personal.cr.aliyuncs.com/boyce6280/sms4dev:latest
+            crpi-24eqfvp93x6tspe9.cn-shenzhen.personal.cr.aliyuncs.com/boyce6280/sms4dev:${{ steps.date.outputs.date }}
