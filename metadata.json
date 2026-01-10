@@ -1,0 +1,5 @@
+{
+  "name": "SMS4Dev",
+  "description": "A developer tool mimicking smtp4dev but for SMS testing. Intercept, inspect, and analyze SMS messages with Gemini AI integration.",
+  "requestFramePermissions": []
+}
