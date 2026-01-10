@@ -331,6 +331,11 @@ app.delete('/api/messages', (req, res) => {
     });
 });
 
+// Handle 404 for API routes to prevent returning HTML
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ error: 'API endpoint not found' });
+});
+
 // Catch all for SPA
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
