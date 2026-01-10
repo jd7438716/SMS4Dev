@@ -58,14 +58,28 @@ If you prefer to run the code locally or contribute to the project:
     ```
 
 3.  **Run the application**:
-    You need to run the backend and frontend in separate terminals.
+    
+    You have several options:
+
+    **Option A: One-click Development Environment (Recommended)**
+    ```bash
+    npm run dev:full
+    ```
+    This will start both the backend (5081) and frontend (3000) concurrently.
+
+    **Option B: Production Preview**
+    ```bash
+    npm start
+    ```
+    This will build the frontend and serve it through the backend on port 5081 (similar to Docker mode).
+
+    **Option C: Manual Start (Separate Terminals)**
+    If you prefer to control them separately:
 
     **Terminal 1 (Backend):**
     ```bash
-    cd server
-    npm start
+    npm run server
     ```
-    The server will start on port 5081.
 
     **Terminal 2 (Frontend):**
     ```bash
