@@ -78,6 +78,17 @@ const db = new sqlite3.Database(dbPath, (err) => {
             status TEXT,
             created TEXT
         )`);
+
+        db.run(`CREATE TABLE IF NOT EXISTS logs (
+            requestId TEXT PRIMARY KEY,
+            timestamp TEXT,
+            method TEXT,
+            endpoint TEXT,
+            statusCode INTEGER,
+            latency INTEGER,
+            requestBody TEXT,
+            responseBody TEXT
+        )`);
     }
 });
 
@@ -86,8 +97,38 @@ const generateId = () => Math.random().toString(36).substring(2, 9);
 
 // API Routes
 
+// --- LOGS ---
+app.get('/api/logs', (req, res) => {
+    db.all("SELECT * FROM logs ORDER BY timestamp DESC LIMIT 100", [], (err, rows) => {
+        if (err) {
+            console.error("Error fetching logs:", err.message);
+            return res.status(500).json({error: err.message});
+        }
+        const logs = rows.map(row => ({
+            ...row,
+            requestBody: row.requestBody ? JSON.parse(row.requestBody) : {},
+            responseBody: row.responseBody ? JSON.parse(row.responseBody) : {}
+        }));
+        res.json(logs);
+    });
+});
+
+app.post('/api/logs', (req, res) => {
+    const { requestId, timestamp, method, endpoint, statusCode, latency, requestBody, responseBody } = req.body;
+    console.log(`[LOG] ${method} ${endpoint} - ${statusCode}`);
+    const sql = "INSERT INTO logs (requestId, timestamp, method, endpoint, statusCode, latency, requestBody, responseBody) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    db.run(sql, [requestId, timestamp, method, endpoint, statusCode, latency, JSON.stringify(requestBody), JSON.stringify(responseBody)], function(err) {
+        if (err) {
+            console.error("Error saving log:", err.message);
+            return res.status(500).json({error: err.message});
+        }
+        res.json({ message: "Log saved" });
+    });
+});
+
 // --- TEMPLATES ---
 app.get('/api/templates', (req, res) => {
+    console.log('[API] GET /api/templates');
     db.all("SELECT * FROM templates ORDER BY created DESC", [], (err, rows) => {
         if (err) return res.status(500).json({error: err.message});
         res.json(rows);
@@ -95,15 +136,18 @@ app.get('/api/templates', (req, res) => {
 });
 
 app.post('/api/templates', (req, res) => {
+    console.log('[API] POST /api/templates');
     const { id, name, content, type, status, created } = req.body;
     const sql = "INSERT INTO templates (id, name, content, type, status, created) VALUES (?, ?, ?, ?, ?, ?)";
     db.run(sql, [id, name, content, type, status, created], function(err) {
         if (err) return res.status(500).json({error: err.message});
+        console.log(`[API] Template added: ${id}`);
         res.json({ id, name, content, type, status, created });
     });
 });
 
 app.delete('/api/templates/:id', (req, res) => {
+    console.log(`[API] DELETE /api/templates/${req.params.id}`);
     db.run("DELETE FROM templates WHERE id = ?", [req.params.id], function(err) {
         if (err) return res.status(500).json({error: err.message});
         res.json({ message: "Deleted", changes: this.changes });
@@ -112,6 +156,7 @@ app.delete('/api/templates/:id', (req, res) => {
 
 // --- SIGNATURES ---
 app.get('/api/signatures', (req, res) => {
+    console.log('[API] GET /api/signatures');
     db.all("SELECT * FROM signatures ORDER BY created DESC", [], (err, rows) => {
         if (err) return res.status(500).json({error: err.message});
         res.json(rows);
@@ -119,16 +164,19 @@ app.get('/api/signatures', (req, res) => {
 });
 
 app.post('/api/signatures', (req, res) => {
+    console.log('[API] POST /api/signatures');
     const { id, text, status, created } = req.body;
     const sql = "INSERT INTO signatures (id, text, status, created) VALUES (?, ?, ?, ?)";
     const createdDate = created || new Date().toISOString();
     db.run(sql, [id, text, status, createdDate], function(err) {
         if (err) return res.status(500).json({error: err.message});
+        console.log(`[API] Signature added: ${id}`);
         res.json({ id, text, status, created: createdDate });
     });
 });
 
 app.delete('/api/signatures/:id', (req, res) => {
+    console.log(`[API] DELETE /api/signatures/${req.params.id}`);
     db.run("DELETE FROM signatures WHERE id = ?", [req.params.id], function(err) {
         if (err) return res.status(500).json({error: err.message});
         res.json({ message: "Deleted", changes: this.changes });
@@ -137,9 +185,11 @@ app.delete('/api/signatures/:id', (req, res) => {
 
 // Get all messages
 app.get('/api/messages', (req, res) => {
+    console.log('[API] GET /api/messages');
     const sql = "SELECT * FROM messages ORDER BY timestamp DESC";
     db.all(sql, [], (err, rows) => {
         if (err) {
+            console.error('[API] Error fetching messages:', err.message);
             res.status(400).json({"error": err.message});
             return;
         }
@@ -163,6 +213,7 @@ app.get('/api/messages', (req, res) => {
 
 // Send a message (simulated)
 app.post('/api/send', (req, res) => {
+    console.log('[API] POST /api/send');
     const { to, body, from, direction, status } = req.body;
     
     // Default values
@@ -181,12 +232,15 @@ app.post('/api/send', (req, res) => {
         encoding: 'GSM-7'
     };
     
+    console.log(`[API] Sending message: ${msg.id} to ${msg.to}`);
+
     const sql = `INSERT INTO messages (id, from_addr, to_addr, body, timestamp, status, direction, segments, encoding, templateId, requestId) 
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     const params = [msg.id, msg.from, msg.to, msg.body, msg.timestamp, msg.status, msg.direction, msg.segments, msg.encoding, null, null];
     
     db.run(sql, params, function(err) {
         if (err) {
+            console.error('[API] Error sending message:', err.message);
             res.status(400).json({"error": err.message});
             return;
         }
@@ -202,8 +256,10 @@ app.post('/api/send', (req, res) => {
 // Delete a message
 app.delete('/api/messages/:id', (req, res) => {
     const id = req.params.id;
+    console.log(`[API] DELETE /api/messages/${id}`);
     db.run("DELETE FROM messages WHERE id = ?", id, function(err) {
         if (err) {
+            console.error('[API] Error deleting message:', err.message);
             res.status(400).json({"error": err.message});
             return;
         }
@@ -214,8 +270,10 @@ app.delete('/api/messages/:id', (req, res) => {
 
 // Clear all messages
 app.delete('/api/messages', (req, res) => {
+    console.log('[API] DELETE /api/messages (Clear All)');
     db.run("DELETE FROM messages", [], function(err) {
         if (err) {
+            console.error('[API] Error clearing messages:', err.message);
             res.status(400).json({"error": err.message});
             return;
         }

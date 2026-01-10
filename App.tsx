@@ -59,6 +59,7 @@ const AppContent: React.FC = () => {
     fetchMessages();
     fetchTemplates();
     fetchSignatures();
+    fetchLogs();
 
     // Socket.IO connection
     const socket = io();
@@ -71,6 +72,18 @@ const AppContent: React.FC = () => {
       socket.disconnect();
     };
   }, []);
+
+  const fetchLogs = async () => {
+    try {
+      const res = await fetch('/api/logs');
+      if (res.ok) {
+        const data = await res.json();
+        setApiLogs(data);
+      }
+    } catch (e) {
+      console.error("Fetch logs error", e);
+    }
+  };
 
   const fetchMessages = async () => {
     try {
@@ -119,23 +132,52 @@ const AppContent: React.FC = () => {
   const handleReceiveMessages = async (newMsgs: SmsMessage[]) => {
     // Post to API
     for (const msg of newMsgs) {
-        await fetch('/api/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                to: msg.to,
-                from: msg.from,
-                body: msg.body,
-                direction: msg.direction,
-                status: msg.status
-            })
-        });
+        const payload = {
+            to: msg.to,
+            from: msg.from,
+            body: msg.body,
+            direction: msg.direction,
+            status: msg.status
+        };
+        
+        const startTime = Date.now();
+        try {
+            const res = await fetch('/api/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await res.json();
+            
+            // Log the injection
+            handleLogApi({
+                requestId: `INJ-${msg.id}`,
+                timestamp: new Date().toISOString(),
+                method: 'POST',
+                endpoint: '/api/send (Inbound Injection)',
+                statusCode: res.status,
+                requestBody: payload,
+                responseBody: data,
+                latency: Date.now() - startTime
+            });
+
+        } catch (e) {
+            console.error("Injection error", e);
+        }
     }
     // Socket will trigger update
   };
 
   const handleLogApi = (log: ApiRequestLog) => {
-    setApiLogs(prev => [...prev, log]);
+    setApiLogs(prev => [log, ...prev]);
+    
+    // Save to backend
+    fetch('/api/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(log)
+    }).catch(console.error);
   };
 
   const handleDelete = async (id: string) => {
