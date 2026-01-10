@@ -13,6 +13,11 @@ export default defineConfig(({ mode }) => {
             target: 'http://localhost:5081',
             changeOrigin: true,
             secure: false,
+          },
+          '/socket.io': {
+            target: 'http://localhost:5081',
+            ws: true,
+            changeOrigin: true
           }
         }
       },

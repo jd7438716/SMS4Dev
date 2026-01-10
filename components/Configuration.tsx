@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { SmsTemplate, SmsSignature, ApiCredential, WebhookConfig } from '../types';
 import { Plus, Trash2, Key, Shield, FileText, CheckCircle, Clock, Copy, RefreshCw, Network, Zap } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
@@ -28,7 +29,12 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   onRegenerateKeys,
   onSaveWebhook
 }) => {
-  const [activeTab, setActiveTab] = useState<'api' | 'signatures' | 'templates' | 'webhooks'>('api');
+  const { tab } = useParams<{ tab: string }>();
+  const navigate = useNavigate();
+  
+  const validTabs = ['api', 'signatures', 'templates', 'webhooks'];
+  const activeTab = (tab && validTabs.includes(tab)) ? (tab as 'api' | 'signatures' | 'templates' | 'webhooks') : 'api';
+  
   const { t, language } = useAppContext();
   
   // Local state for forms
@@ -120,25 +126,25 @@ export const Configuration: React.FC<ConfigurationProps> = ({
         {/* Sidebar for Config */}
         <div className="w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col">
           <button 
-             onClick={() => setActiveTab('api')}
+             onClick={() => navigate('/server/config/api')}
              className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 transition-colors ${activeTab === 'api' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-r-4 border-blue-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
              <Key size={18} /> {t('config.tabs.api')}
           </button>
           <button 
-             onClick={() => setActiveTab('signatures')}
+             onClick={() => navigate('/server/config/signatures')}
              className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 transition-colors ${activeTab === 'signatures' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-r-4 border-blue-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
              <Shield size={18} /> {t('config.tabs.signatures')}
           </button>
           <button 
-             onClick={() => setActiveTab('templates')}
+             onClick={() => navigate('/server/config/templates')}
              className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 transition-colors ${activeTab === 'templates' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-r-4 border-blue-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
              <FileText size={18} /> {t('config.tabs.templates')}
           </button>
           <button 
-             onClick={() => setActiveTab('webhooks')}
+             onClick={() => navigate('/server/config/webhooks')}
              className={`px-6 py-4 text-left font-medium text-sm flex items-center gap-3 transition-colors ${activeTab === 'webhooks' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-r-4 border-blue-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
              <Network size={18} /> {t('config.tabs.webhooks')}

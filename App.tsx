@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate, Outlet } from 'react-router-dom';
-import { MessageList } from './components/MessageList';
-import { MessageDetail } from './components/MessageDetail';
-import { Simulator } from './components/Simulator';
+import { InboxView } from './components/InboxView';
 import { Configuration } from './components/Configuration';
 import { IntegrationDocs } from './components/IntegrationDocs';
 import { ApiLogs } from './components/ApiLogs';
@@ -31,7 +29,6 @@ const AppContent: React.FC = () => {
   });
 
   // UI State
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
   const [showSimulator, setShowSimulator] = useState(true);
 
@@ -41,7 +38,10 @@ const AppContent: React.FC = () => {
   // Navigation
   const navigate = useNavigate();
   const location = useLocation();
-  const currentView = location.pathname.substring(1) || 'inbox';
+  const isMessagesView = location.pathname.startsWith('/messages');
+  const isLogsView = location.pathname.startsWith('/server/logs');
+  const isConfigView = location.pathname.startsWith('/server/config');
+  const isDocsView = location.pathname.startsWith('/docs');
 
   // Load initial state
   useEffect(() => {
@@ -131,7 +131,7 @@ const AppContent: React.FC = () => {
             })
         });
     }
-    fetchMessages();
+    // Socket will trigger update
   };
 
   const handleLogApi = (log: ApiRequestLog) => {
@@ -141,14 +141,13 @@ const AppContent: React.FC = () => {
   const handleDelete = async (id: string) => {
     await fetch(`/api/messages/${id}`, { method: 'DELETE' });
     fetchMessages();
-    if (selectedId === id) setSelectedId(null);
   };
 
   const handleClearAll = async () => {
     if (confirm("Are you sure you want to clear all messages?")) {
       await fetch('/api/messages', { method: 'DELETE' });
       fetchMessages();
-      setSelectedId(null);
+      navigate('/messages');
     }
   };
 
@@ -203,8 +202,6 @@ const AppContent: React.FC = () => {
     });
   };
 
-  const selectedMessage = messages.find(m => m.id === selectedId) || null;
-
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans overflow-hidden transition-colors">
       
@@ -216,29 +213,29 @@ const AppContent: React.FC = () => {
          
          <nav className="flex flex-col gap-4 w-full">
             <button 
-                onClick={() => navigate('/messages/inbox')}
-                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${location.pathname.includes('/messages') ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                onClick={() => navigate('/messages')}
+                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${isMessagesView ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
                 title={t('nav.inbox')}
             >
                 <Inbox size={24} />
             </button>
             <button 
                 onClick={() => navigate('/server/logs')}
-                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${location.pathname.includes('/server/logs') ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${isLogsView ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
                 title={t('nav.logs')}
             >
                 <ScrollText size={24} />
             </button>
             <button 
                 onClick={() => navigate('/server/config')}
-                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${location.pathname.includes('/server/config') ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${isConfigView ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
                 title={t('nav.config')}
             >
                 <Settings size={24} />
             </button>
             <button 
                 onClick={() => navigate('/docs/integration')}
-                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${location.pathname.includes('/docs') ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                className={`w-full p-3 flex justify-center transition-colors border-l-4 ${isDocsView ? 'border-blue-500 bg-slate-800 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800'}`}
                 title={t('nav.docs')}
             >
                 <BookOpen size={24} />
@@ -252,10 +249,10 @@ const AppContent: React.FC = () => {
         {/* Top Header */}
         <header className="h-14 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 z-10 transition-colors">
             <h1 className="font-bold text-lg text-gray-800 dark:text-gray-100 tracking-tight">
-                {currentView === 'inbox' && t('nav.inbox')}
-                {currentView === 'logs' && t('nav.logs')}
-                {currentView === 'config' && t('nav.config')}
-                {currentView === 'docs' && t('nav.docs')}
+                {isMessagesView && t('nav.inbox')}
+                {isLogsView && t('nav.logs')}
+                {isConfigView && t('nav.config')}
+                {isDocsView && t('nav.docs')}
             </h1>
 
             <div className="flex items-center gap-4">
@@ -283,7 +280,7 @@ const AppContent: React.FC = () => {
                     {t('header.port')}: 2525
                 </div>
                 
-                {currentView === 'inbox' && (
+                {isMessagesView && (
                     <>
                         <button 
                             onClick={() => setShowSimulator(!showSimulator)}
@@ -306,33 +303,37 @@ const AppContent: React.FC = () => {
         {/* Content */}
         <div className="flex-1 flex overflow-hidden">
             <Routes>
-                <Route path="/messages/inbox" element={
-                    <>
-                        <MessageList 
-                            messages={messages} 
-                            selectedId={selectedId} 
-                            onSelect={setSelectedId}
-                            filter={filter}
-                            onFilterChange={setFilter}
-                        />
-                        <MessageDetail 
-                            message={selectedMessage} 
-                            onDelete={handleDelete}
-                        />
-                        {showSimulator && (
-                            <Simulator 
-                                onReceive={handleReceiveMessages} 
-                                onLogApi={handleLogApi}
-                                templates={templates} 
-                                signatures={signatures} 
-                            />
-                        )}
-                    </>
+                <Route path="/messages" element={
+                    <InboxView 
+                        messages={messages} 
+                        filter={filter}
+                        onFilterChange={setFilter}
+                        onDelete={handleDelete}
+                        showSimulator={showSimulator}
+                        onReceive={handleReceiveMessages}
+                        onLogApi={handleLogApi}
+                        templates={templates} 
+                        signatures={signatures} 
+                    />
+                } />
+                <Route path="/messages/:id" element={
+                    <InboxView 
+                        messages={messages} 
+                        filter={filter}
+                        onFilterChange={setFilter}
+                        onDelete={handleDelete}
+                        showSimulator={showSimulator}
+                        onReceive={handleReceiveMessages}
+                        onLogApi={handleLogApi}
+                        templates={templates} 
+                        signatures={signatures} 
+                    />
                 } />
                 
                 <Route path="/server/logs" element={<ApiLogs logs={apiLogs} />} />
                 
-                <Route path="/server/config" element={
+                <Route path="/server/config" element={<Navigate to="/server/config/api" replace />} />
+                <Route path="/server/config/:tab" element={
                     <Configuration 
                         templates={templates}
                         signatures={signatures}
@@ -349,7 +350,7 @@ const AppContent: React.FC = () => {
                 
                 <Route path="/docs/integration" element={<IntegrationDocs apiCredential={apiCredential} />} />
                 
-                <Route path="*" element={<Navigate to="/messages/inbox" replace />} />
+                <Route path="*" element={<Navigate to="/messages" replace />} />
             </Routes>
         </div>
       </div>
