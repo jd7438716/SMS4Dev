@@ -14,7 +14,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: process.env.CORS_ORIGIN || "http://localhost:5173", // 默认允许本地开发服务器
+        origin: "*", // 允许所有来源以方便测试
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -413,25 +413,9 @@ const sanitizeInput = (req, res, next) => {
     next();
 };
 
-// CORS配置
+// CORS配置 - 完全开放以方便测试
 const corsOptions = {
-    origin: function (origin, callback) {
-        // 允许没有origin的请求（如移动应用、curl请求）
-        if (!origin) return callback(null, true);
-        
-        // 从环境变量读取允许的来源
-        const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-            ? process.env.CORS_ALLOWED_ORIGINS.split(',')
-            : ['http://localhost:5173', 'http://localhost:5081'];
-        
-        // 检查origin是否在允许列表中
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            console.warn(`[CORS] Blocked origin: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: '*', // 允许所有来源
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-SMS4DEV-KEY', 'X-SMS4DEV-SECRET', 'X-SMS4DEV-TIMESTAMP', 'X-SMS4DEV-SIGNATURE'],
     credentials: true,
