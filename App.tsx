@@ -11,6 +11,28 @@ import { io } from 'socket.io-client';
 
 const STORAGE_KEY = 'sms4dev_state_v3';
 
+// 从环境变量读取默认Access Keys
+const getDefaultAccessKeys = (): ApiCredential => {
+  // 在Vite中，环境变量通过import.meta.env访问
+  // 但由于类型定义问题，我们使用一个更简单的方法
+  // 在实际部署中，应该通过构建时注入环境变量
+  
+  // 尝试从window对象读取（如果通过脚本注入）
+  const windowEnv = (window as any).__SMS4DEV_ENV__;
+  if (windowEnv?.SMS4DEV_ACCESS_KEY_ID && windowEnv?.SMS4DEV_ACCESS_KEY_SECRET) {
+    return {
+      accessKeyId: windowEnv.SMS4DEV_ACCESS_KEY_ID,
+      accessKeySecret: windowEnv.SMS4DEV_ACCESS_KEY_SECRET
+    };
+  }
+  
+  // 默认值（开发环境）
+  return {
+    accessKeyId: 'SMS4DEV_KEY_EXAMPLE',
+    accessKeySecret: 'SMS4DEV_SECRET_EXAMPLE'
+  };
+};
+
 const AppContent: React.FC = () => {
   // Data State
   const [messages, setMessages] = useState<SmsMessage[]>([]);
@@ -18,10 +40,7 @@ const AppContent: React.FC = () => {
   const [signatures, setSignatures] = useState<SmsSignature[]>([]);
   const [apiLogs, setApiLogs] = useState<ApiRequestLog[]>([]);
   
-  const [apiCredential, setApiCredential] = useState<ApiCredential>({
-    accessKeyId: 'SMS4DEV_KEY_EXAMPLE',
-    accessKeySecret: 'SMS4DEV_SECRET_EXAMPLE'
-  });
+  const [apiCredential, setApiCredential] = useState<ApiCredential>(getDefaultAccessKeys());
   
   const [webhookConfig, setWebhookConfig] = useState<WebhookConfig>({
     url: '',
@@ -257,6 +276,10 @@ const AppContent: React.FC = () => {
     });
   };
 
+  const handleSaveCustomKeys = (credential: ApiCredential) => {
+    setApiCredential(credential);
+  };
+
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans overflow-hidden transition-colors">
       
@@ -389,7 +412,7 @@ const AppContent: React.FC = () => {
                 
                 <Route path="/server/config" element={<Navigate to="/server/config/api" replace />} />
                 <Route path="/server/config/:tab" element={
-                    <Configuration 
+                    <Configuration
                         templates={templates}
                         signatures={signatures}
                         apiCredential={apiCredential}
@@ -400,6 +423,7 @@ const AppContent: React.FC = () => {
                         onAddSignature={handleAddSignature}
                         onDeleteSignature={handleDeleteSignature}
                         onRegenerateKeys={handleRegenerateKeys}
+                        onSaveCustomKeys={handleSaveCustomKeys}
                         onSaveWebhook={setWebhookConfig}
                     />
                 } />

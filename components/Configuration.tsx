@@ -15,6 +15,7 @@ interface ConfigurationProps {
   onAddSignature: (s: SmsSignature) => void;
   onDeleteSignature: (id: string) => void;
   onRegenerateKeys: () => void;
+  onSaveCustomKeys: (credential: ApiCredential) => void;
   onSaveWebhook: (config: WebhookConfig) => void;
 }
 
@@ -29,6 +30,7 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   onAddSignature,
   onDeleteSignature,
   onRegenerateKeys,
+  onSaveCustomKeys,
   onSaveWebhook
 }) => {
   const { tab } = useParams<{ tab: string }>();
@@ -49,6 +51,11 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   // Webhook form state
   const [webhookUrl, setWebhookUrl] = useState(webhookConfig.url);
   const [webhookEnabled, setWebhookEnabled] = useState(webhookConfig.enabled);
+
+  // Access Keys edit state
+  const [editingAccessKeys, setEditingAccessKeys] = useState(false);
+  const [customAccessKeyId, setCustomAccessKeyId] = useState('');
+  const [customAccessKeySecret, setCustomAccessKeySecret] = useState('');
 
   const PRESETS_EN: Array<{ name: string, type: 'OTP' | 'Notification' | 'Marketing', content: string }> = [
     { name: 'OTP Code', type: 'OTP', content: 'Your verification code is ${code}. Valid for 5 minutes.' },
@@ -168,6 +175,69 @@ export const Configuration: React.FC<ConfigurationProps> = ({
     });
   };
 
+  const handleEditAccessKeys = () => {
+    setEditingAccessKeys(true);
+    setCustomAccessKeyId(apiCredential.accessKeyId);
+    setCustomAccessKeySecret(apiCredential.accessKeySecret);
+  };
+
+  const handleSaveCustomKeys = () => {
+    if (!customAccessKeyId.trim() || !customAccessKeySecret.trim()) {
+      alert("Access Key ID and Secret are required");
+      return;
+    }
+
+    // Basic validation
+    if (customAccessKeyId.length < 8) {
+      alert("Access Key ID must be at least 8 characters");
+      return;
+    }
+
+    if (customAccessKeyId.length > 50) {
+      alert("Access Key ID must be at most 50 characters");
+      return;
+    }
+
+    // Format validation for Access Key ID
+    const keyIdRegex = /^[A-Za-z0-9_-]+$/;
+    if (!keyIdRegex.test(customAccessKeyId)) {
+      alert("Access Key ID can only contain letters, numbers, underscores and hyphens");
+      return;
+    }
+
+    if (customAccessKeySecret.length < 16) {
+      alert("Access Key Secret must be at least 16 characters");
+      return;
+    }
+
+    if (customAccessKeySecret.length > 100) {
+      alert("Access Key Secret must be at most 100 characters");
+      return;
+    }
+
+    // Format validation for Access Key Secret
+    const secretRegex = /^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]+$/;
+    if (!secretRegex.test(customAccessKeySecret)) {
+      alert("Access Key Secret contains invalid characters");
+      return;
+    }
+
+    onSaveCustomKeys({
+      accessKeyId: customAccessKeyId,
+      accessKeySecret: customAccessKeySecret
+    });
+    
+    setEditingAccessKeys(false);
+    setCustomAccessKeyId('');
+    setCustomAccessKeySecret('');
+  };
+
+  const handleCancelEditKeys = () => {
+    setEditingAccessKeys(false);
+    setCustomAccessKeyId('');
+    setCustomAccessKeySecret('');
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-gray-50 dark:bg-slate-950 overflow-hidden transition-colors">
       <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-8 py-6">
@@ -232,6 +302,9 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                              <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" onClick={() => navigator.clipboard.writeText(apiCredential.accessKeyId)}>
                                <Copy size={16} />
                              </button>
+                             <button className="p-2 text-blue-400 hover:text-blue-600" onClick={handleEditAccessKeys}>
+                               <Edit2 size={16} />
+                             </button>
                           </div>
                         </div>
                         <div>
@@ -246,6 +319,57 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                           </div>
                         </div>
                       </div>
+
+                      {/* Access Keys Edit Form */}
+                      {editingAccessKeys && (
+                        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                          <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-3">
+                            Configure Access Keys
+                          </h4>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Access Key ID
+                              </label>
+                              <input
+                                type="text"
+                                value={customAccessKeyId}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomAccessKeyId(e.target.value)}
+                                placeholder="Enter Access Key ID"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Access Key Secret
+                              </label>
+                              <input
+                                type="password"
+                                value={customAccessKeySecret}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomAccessKeySecret(e.target.value)}
+                                placeholder="Enter Access Key Secret"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                              />
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2">
+                              <button
+                                type="button"
+                                onClick={handleCancelEditKeys}
+                                className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleSaveCustomKeys}
+                                className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                    </div>
 
                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-lg p-4">
@@ -268,11 +392,11 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                       
                       <div className="space-y-4">
                         <div className="flex items-center gap-2 mb-4">
-                           <input 
-                              type="checkbox" 
+                           <input
+                              type="checkbox"
                               id="webhook-enable"
                               checked={webhookEnabled}
-                              onChange={e => setWebhookEnabled(e.target.checked)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWebhookEnabled(e.target.checked)}
                               className="rounded border-gray-300 dark:border-slate-700 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-slate-800"
                            />
                            <label htmlFor="webhook-enable" className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('config.webhooks.enable')}</label>
@@ -280,10 +404,10 @@ export const Configuration: React.FC<ConfigurationProps> = ({
 
                         <div>
                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('config.webhooks.endpoint')}</label>
-                           <input 
-                              type="text" 
+                           <input
+                              type="text"
                               value={webhookUrl}
-                              onChange={e => setWebhookUrl(e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWebhookUrl(e.target.value)}
                               placeholder="http://localhost:8080/sms/callback"
                               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                            />
@@ -320,12 +444,12 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                   <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('config.sig.add')}</h3>
                     <form onSubmit={handleAddSig} className="flex gap-4">
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         placeholder={t('config.sig.placeholder')}
                         className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                         value={newSigText}
-                        onChange={e => setNewSigText(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewSigText(e.target.value)}
                         maxLength={12}
                       />
                       <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
@@ -403,19 +527,19 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('config.tpl.name')}</label>
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               value={newTplName}
-                              onChange={e => setNewTplName(e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTplName(e.target.value)}
                               placeholder="e.g. Verification Code"
                               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                             />
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('config.tpl.type')}</label>
-                            <select 
+                            <select
                               value={newTplType}
-                              onChange={e => setNewTplType(e.target.value as any)}
+                              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewTplType(e.target.value as 'OTP' | 'Notification' | 'Marketing')}
                               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                             >
                               <option value="OTP">{t('config.tpl.otp')}</option>
@@ -426,10 +550,10 @@ export const Configuration: React.FC<ConfigurationProps> = ({
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('config.tpl.content')}</label>
-                          <textarea 
+                          <textarea
                              rows={2}
                              value={newTplContent}
-                             onChange={e => setNewTplContent(e.target.value)}
+                             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewTplContent(e.target.value)}
                              placeholder={t('config.tpl.placeholderContent')}
                              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                           />

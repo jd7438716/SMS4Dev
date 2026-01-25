@@ -133,7 +133,8 @@ export const translations = {
       step3: "3. Response",
       step3Desc: "A successful request will return a generic success response.",
       curl: "cURL Example",
-      js: "JavaScript (Fetch) Example"
+      js: "JavaScript (Fetch) Example",
+      powershell: "PowerShell Example"
     }
   },
   zh: {
@@ -269,7 +270,8 @@ export const translations = {
       step3: "3. 响应",
       step3Desc: "成功请求将返回类似于主要提供商的通用成功响应。",
       curl: "cURL 示例",
-      js: "JavaScript (Fetch) 示例"
+      js: "JavaScript (Fetch) 示例",
+      powershell: "PowerShell 示例"
     }
   }
 };

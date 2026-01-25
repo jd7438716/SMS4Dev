@@ -48,6 +48,24 @@ curl -X POST ${endpoint} \\
   }'
   `.trim();
 
+  const powershellExample = `
+$headers = @{
+  "Content-Type" = "application/json"
+  "X-SMS4DEV-KEY" = "${apiCredential.accessKeyId}"
+  "X-SMS4DEV-SECRET" = "${apiCredential.accessKeySecret}"
+}
+
+$body = @{
+  to = "+15550200"
+  from = "CloudService"
+  body = "【Tianv】Your verification code is 5555. Valid for 5 minutes."
+  direction = "outbound"
+  status = "queued"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "${endpoint.replace('/v1/send', '/send')}" -Method Post -Headers $headers -Body $body
+  `.trim();
+
   return (
     <div className="flex-1 overflow-y-auto bg-white dark:bg-slate-950 p-8 transition-colors">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -94,6 +112,18 @@ curl -X POST ${endpoint} \\
             </div>
             <pre className="bg-slate-950 dark:bg-slate-900 p-4 rounded-b-lg overflow-x-auto text-sm text-blue-300 font-mono">
               {jsExample}
+            </pre>
+          </div>
+
+          <div className="mt-6">
+             <div className="bg-slate-900 dark:bg-slate-800 rounded-t-lg px-4 py-2 flex justify-between items-center border-b border-slate-700">
+              <span className="text-xs text-slate-400 font-mono">{t('docs.powershell')}</span>
+              <button onClick={() => navigator.clipboard.writeText(powershellExample)} className="text-slate-400 hover:text-white">
+                <Copy size={14} />
+              </button>
+            </div>
+            <pre className="bg-slate-950 dark:bg-slate-900 p-4 rounded-b-lg overflow-x-auto text-sm text-cyan-300 font-mono">
+              {powershellExample}
             </pre>
           </div>
 
