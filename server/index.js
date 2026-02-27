@@ -341,13 +341,8 @@ const createRateLimiter = (windowMs, max, message = 'Too many requests, please t
             Message: message,
             Details: `Rate limit exceeded. Maximum ${max} requests per ${windowMs / 1000} seconds.`
         },
-        standardHeaders: true, // 返回标准的RateLimit-*头
-        legacyHeaders: false,  // 禁用X-RateLimit-*头
-        keyGenerator: (req) => {
-            // 使用IP地址作为键，但如果提供了Access Key，则使用Access Key
-            const accessKey = req.header('X-SMS4DEV-KEY');
-            return accessKey || req.ip;
-        },
+        standardHeaders: true,
+        legacyHeaders: false,
         skipSuccessfulRequests: false,
         skipFailedRequests: false,
         handler: (req, res, next, options) => {

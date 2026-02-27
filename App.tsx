@@ -8,6 +8,7 @@ import { SmsMessage, SmsTemplate, SmsSignature, ApiCredential, ApiRequestLog, We
 import { Server, Settings, Activity, Inbox, BookOpen, ScrollText, Moon, Sun, Languages, ChevronRight } from 'lucide-react';
 import { AppProvider, useAppContext } from './contexts/AppContext';
 import { io } from 'socket.io-client';
+import { apiClient } from './services/api';
 
 const STORAGE_KEY = 'sms4dev_state_v3';
 
@@ -41,6 +42,11 @@ const AppContent: React.FC = () => {
   const [apiLogs, setApiLogs] = useState<ApiRequestLog[]>([]);
   
   const [apiCredential, setApiCredential] = useState<ApiCredential>(getDefaultAccessKeys());
+  
+  // 初始化 apiClient 的 credential
+  useEffect(() => {
+    apiClient.setCredential(apiCredential);
+  }, [apiCredential]);
   
   const [webhookConfig, setWebhookConfig] = useState<WebhookConfig>({
     url: '',
@@ -94,11 +100,8 @@ const AppContent: React.FC = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch('/api/logs');
-      if (res.ok) {
-        const data = await res.json();
-        setApiLogs(data);
-      }
+      const data = await apiClient.get<any>('/api/logs');
+      setApiLogs(data);
     } catch (e) {
       console.error("Fetch logs error", e);
     }
@@ -106,11 +109,8 @@ const AppContent: React.FC = () => {
 
   const fetchMessages = async () => {
     try {
-      const res = await fetch('/api/messages');
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(data);
-      }
+      const data = await apiClient.get<SmsMessage[]>('/api/messages');
+      setMessages(data);
     } catch (e) {
       console.error("Fetch error", e);
     }
@@ -118,11 +118,8 @@ const AppContent: React.FC = () => {
 
   const fetchTemplates = async () => {
     try {
-      const res = await fetch('/api/templates');
-      if (res.ok) {
-        const data = await res.json();
-        setTemplates(data);
-      }
+      const data = await apiClient.get<SmsTemplate[]>('/api/templates');
+      setTemplates(data);
     } catch (e) {
       console.error("Fetch templates error", e);
     }
@@ -130,11 +127,8 @@ const AppContent: React.FC = () => {
 
   const fetchSignatures = async () => {
     try {
-      const res = await fetch('/api/signatures');
-      if (res.ok) {
-        const data = await res.json();
-        setSignatures(data);
-      }
+      const data = await apiClient.get<SmsSignature[]>('/api/signatures');
+      setSignatures(data);
     } catch (e) {
       console.error("Fetch signatures error", e);
     }
@@ -192,80 +186,72 @@ const AppContent: React.FC = () => {
     setApiLogs(prev => [log, ...prev]);
     
     // Save to backend
-    fetch('/api/logs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(log)
-    }).catch(console.error);
+    apiClient.post('/api/logs', log).catch(console.error);
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/messages/${id}`, { method: 'DELETE' });
-    fetchMessages();
+    try {
+      await apiClient.delete(`/api/messages/${id}`);
+      fetchMessages();
+    } catch (e) {
+      console.error("Delete message error", e);
+    }
   };
 
   const handleClearAll = async () => {
     if (confirm("Are you sure you want to clear all messages?")) {
-      await fetch('/api/messages', { method: 'DELETE' });
-      fetchMessages();
-      navigate('/messages');
+      try {
+        await apiClient.delete('/api/messages');
+        fetchMessages();
+        navigate('/messages');
+      } catch (e) {
+        console.error("Clear all error", e);
+      }
     }
   };
 
   const handleAddTemplate = async (tpl: SmsTemplate) => {
     try {
-        const res = await fetch('/api/templates', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(tpl)
-        });
-        if (res.ok) fetchTemplates();
+      await apiClient.post('/api/templates', tpl);
+      fetchTemplates();
     } catch (e) {
-        console.error("Add template error", e);
+      console.error("Add template error", e);
     }
   };
 
   const handleUpdateTemplate = async (id: string, tpl: SmsTemplate) => {
     try {
-        const res = await fetch(`/api/templates/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(tpl)
-        });
-        if (res.ok) fetchTemplates();
+      await apiClient.put(`/api/templates/${id}`, tpl);
+      fetchTemplates();
     } catch (e) {
-        console.error("Update template error", e);
+      console.error("Update template error", e);
     }
   };
 
   const handleDeleteTemplate = async (id: string) => {
     try {
-        await fetch(`/api/templates/${id}`, { method: 'DELETE' });
-        fetchTemplates();
+      await apiClient.delete(`/api/templates/${id}`);
+      fetchTemplates();
     } catch (e) {
-        console.error("Delete template error", e);
+      console.error("Delete template error", e);
     }
   };
 
   const handleAddSignature = async (sig: SmsSignature) => {
     try {
-        const res = await fetch('/api/signatures', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(sig)
-        });
-        if (res.ok) fetchSignatures();
+      await apiClient.post('/api/signatures', sig);
+      fetchSignatures();
     } catch (e) {
-        console.error("Add signature error", e);
+      console.error("Add signature error", e);
     }
   };
 
   const handleDeleteSignature = async (id: string) => {
     try {
-        await fetch(`/api/signatures/${id}`, { method: 'DELETE' });
-        fetchSignatures();
+      await apiClient.delete(`/api/signatures/${id}`);
+      fetchSignatures();
     } catch (e) {
-        console.error("Delete signature error", e);
+      console.error("Delete signature error", e);
     }
   };
 
