@@ -155,13 +155,7 @@ const AppContent: React.FC = () => {
         
         const startTime = Date.now();
         try {
-            const res = await fetch('/api/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            const data = await res.json();
+            const data = await apiClient.post('/api/send', payload);
             
             // Log the injection
             handleLogApi({
@@ -169,7 +163,7 @@ const AppContent: React.FC = () => {
                 timestamp: new Date().toISOString(),
                 method: 'POST',
                 endpoint: '/api/send (Inbound Injection)',
-                statusCode: res.status,
+                statusCode: 200,
                 requestBody: payload,
                 responseBody: data,
                 latency: Date.now() - startTime
