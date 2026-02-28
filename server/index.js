@@ -701,6 +701,30 @@ app.get('/api/messages', (req, res) => {
     });
 });
 
+// 验证短信签名是否有效
+const validateSignature = (signName, callback) => {
+    // 如果没有提供签名，使用默认签名，跳过验证
+    if (!signName) {
+        return callback(null, true);
+    }
+    
+    // 查询数据库验证签名是否存在且状态为 approved
+    db.get("SELECT * FROM signatures WHERE text = ? AND status = 'approved'", [signName], (err, row) => {
+        if (err) {
+            console.error('[SIGNATURE] Database error:', err.message);
+            return callback(err, false);
+        }
+        
+        if (!row) {
+            console.log(`[SIGNATURE] Invalid signature: "${signName}" not found or not approved`);
+            return callback(null, false);
+        }
+        
+        console.log(`[SIGNATURE] Valid signature: "${signName}"`);
+        callback(null, true);
+    });
+};
+
 // New API v1 for SMS sending
 app.post('/api/v1/send', [
     body('phone').isString().trim().notEmpty(),
@@ -721,47 +745,65 @@ app.post('/api/v1/send', [
     
     const { phone, signName, templateCode, templateParam } = req.body;
     
-    // Construct body content from template params if available
-    let bodyContent = `[${signName || 'SMS4Dev'}] `;
-    if (templateParam && templateParam.code) {
-        bodyContent += `Your verification code is ${templateParam.code}. Valid for 5 minutes.`;
-    } else {
-        bodyContent += `Message template: ${templateCode}`;
-    }
-    
-    const requestId = generateId();
-    const bizId = generateId() + "^0";
-    
-    const msg = {
-        id: requestId,
-        from: signName || 'System',
-        to: phone,
-        body: bodyContent,
-        timestamp: new Date().toISOString(),
-        status: 'delivered',
-        direction: 'outbound',
-        segments: 1,
-        encoding: 'GSM-7',
-        templateId: templateCode,
-        requestId: requestId
-    };
-    
-    const sql = `INSERT INTO messages (id, from_addr, to_addr, body, timestamp, status, direction, segments, encoding, templateId, requestId) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [msg.id, msg.from, msg.to, msg.body, msg.timestamp, msg.status, msg.direction, msg.segments, msg.encoding, msg.templateId, msg.requestId];
-    
-    db.run(sql, params, function(err) {
+    // 验证短信签名
+    validateSignature(signName, (err, isValid) => {
         if (err) {
-            console.error('[API] Error sending message:', err.message);
-            res.status(500).json({ Code: "InternalError", Message: err.message });
-            return;
+            return res.status(500).json({ 
+                Code: "InternalError", 
+                Message: "Failed to validate signature" 
+            });
         }
-        io.emit('messages_update');
-        res.json({
-            "Code": "OK",
-            "Message": "OK",
-            "RequestId": requestId,
-            "BizId": bizId
+        
+        if (!isValid) {
+            return res.status(400).json({
+                Code: "InvalidSignature",
+                Message: "The signature does not exist or is not active. Please configure the signature in the web UI first.",
+                Signature: signName
+            });
+        }
+        
+        // Construct body content from template params if available
+        let bodyContent = `[${signName || 'SMS4Dev'}] `;
+        if (templateParam && templateParam.code) {
+            bodyContent += `Your verification code is ${templateParam.code}. Valid for 5 minutes.`;
+        } else {
+            bodyContent += `Message template: ${templateCode}`;
+        }
+        
+        const requestId = generateId();
+        const bizId = generateId() + "^0";
+        
+        const msg = {
+            id: requestId,
+            from: signName || 'System',
+            to: phone,
+            body: bodyContent,
+            timestamp: new Date().toISOString(),
+            status: 'delivered',
+            direction: 'outbound',
+            segments: 1,
+            encoding: 'GSM-7',
+            templateId: templateCode,
+            requestId: requestId
+        };
+        
+        const sql = `INSERT INTO messages (id, from_addr, to_addr, body, timestamp, status, direction, segments, encoding, templateId, requestId) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const params = [msg.id, msg.from, msg.to, msg.body, msg.timestamp, msg.status, msg.direction, msg.segments, msg.encoding, msg.templateId, msg.requestId];
+        
+        db.run(sql, params, function(err) {
+            if (err) {
+                console.error('[API] Error sending message:', err.message);
+                res.status(500).json({ Code: "InternalError", Message: err.message });
+                return;
+            }
+            io.emit('messages_update');
+            res.json({
+                "Code": "OK",
+                "Message": "OK",
+                "RequestId": requestId,
+                "BizId": bizId
+            });
         });
     });
 });
